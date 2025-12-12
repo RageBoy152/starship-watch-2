@@ -10,6 +10,7 @@ export const defaultPOI: POI = {
   location: "Space Coast, Florida, USA",
   longitude: -80.66773818318366,
   latitude: 28.543132193815936,
+  fileName: ""
 };
 
 export const defaultVehicle: Vehicle = {

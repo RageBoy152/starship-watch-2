@@ -4,8 +4,9 @@ import { Marker } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { GroupedLocation, POI } from '@/lib/types';
 import { FlagTriangleRight } from 'lucide-react';
+import { redirect } from 'next/navigation';
 
-export default function POIMarker({ groupedLocation, onClick }: { groupedLocation: GroupedLocation, onClick: (poi: POI) => void }) {
+export default function POIMarker({ groupedLocation }: { groupedLocation: GroupedLocation }) {
   return (
     <Marker
       longitude={groupedLocation.longitude}
@@ -30,7 +31,7 @@ export default function POIMarker({ groupedLocation, onClick }: { groupedLocatio
 
           <div className="flex flex-col gap-1 uppercase text-sm">
             {groupedLocation.sites.map((site) => 
-              <p key={site.id} className="hover:text-accent cursor-pointer" onClick={() => onClick(site)}>{site.name}</p>
+              <p key={site.id} className="hover:text-accent cursor-pointer" onClick={() => { redirect(`/site/${site.id}`); }}>{site.name}</p>
             )}
           </div>
         </section>

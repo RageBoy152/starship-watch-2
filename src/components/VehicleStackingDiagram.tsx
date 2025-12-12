@@ -1,14 +1,15 @@
 import { Vehicle } from "@/lib/types";
 import Section from "./UI/section";
 import { XIcon } from "lucide-react";
+import moment from "moment-timezone";
 
 export default function VehicleStackingDiagram({ vehicle, closeDiagram }: { vehicle: Vehicle, closeDiagram: () => void }) {
   return (
-    <Section className="w-sm">
+    <Section className="w-sm h-fit">
       <div className="flex items-center justify-between">
         <div className="uppercase font-bold">
           <h2 className="text-2xl">{vehicle.type} {vehicle.serial_number}</h2>
-          <h3 className="font-consolas text-label-secondary">Stacking Diagram - 2025-12-06</h3>
+          <h3 className="font-consolas text-label-secondary">Stacking Diagram - {moment().format("YYYY-MM-DD")}</h3>
         </div>
         <button className="cursor-pointer p-3 pe-0" onClick={closeDiagram}><XIcon className="w-5 h-5" /></button>
       </div>

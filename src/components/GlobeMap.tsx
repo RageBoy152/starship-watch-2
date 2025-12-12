@@ -6,16 +6,11 @@ import POIMarker from './POIMarker';
 import { POI } from '@/lib/types';
 import { useRef } from 'react';
 import { groupPOIsByLocation } from '@/lib/utils';
-import { redirect } from 'next/navigation';
 
 
 export default function GlobeMap({ pois }: { pois: POI[] }) {
   const mapRef = useRef<MapRef|null>(null);
 
-  const handleMapTransition = (poi?: POI) => {
-    redirect(`/site/${poi?.id}`);
-  }
-  
   const controls_dev = false;
   return (
     <>
@@ -46,7 +41,7 @@ export default function GlobeMap({ pois }: { pois: POI[] }) {
         <AttributionControl compact={true}/>
 
         {groupPOIsByLocation(pois).map((groupedLocation, i) =>
-          <POIMarker key={i} groupedLocation={groupedLocation} onClick={(poi) => handleMapTransition(poi)} />
+          <POIMarker key={i} groupedLocation={groupedLocation} />
         )}
       </Map>
     

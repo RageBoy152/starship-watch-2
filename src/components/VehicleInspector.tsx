@@ -16,6 +16,8 @@ import moment from "moment-timezone";
 import { VehicleMilestone } from "@/lib/types";
 import { UUID } from "crypto";
 import { pois } from "@/lib/tempData";
+import { Dialog, DialogTrigger } from "./UI/dialog";
+import VehicleAnalyticsModal from "./VehicleAnalyticsModal";
 
 
 export default function VehicleInspector() {
@@ -123,14 +125,21 @@ export default function VehicleInspector() {
 
           <div className="flex gap-1">
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button className="w-fit p-3">
-                  <ChartNoAxesCombinedIcon className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Vehicle Analytics</p>
-              </TooltipContent>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button className="w-fit p-3">
+                      <ChartNoAxesCombinedIcon className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                </DialogTrigger>
+                  
+                <TooltipContent side="bottom">
+                  <p>Vehicle Analytics</p>
+                </TooltipContent>
+
+                <VehicleAnalyticsModal />
+              </Dialog>
             </Tooltip>
             
             <Tooltip>
