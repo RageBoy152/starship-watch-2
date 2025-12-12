@@ -1,4 +1,3 @@
-import { POI, Vehicle } from "@/lib/types";
 import SitePageHeading from "./SitePageHeading";
 import SitePageVehiclesList from "./SitePageVehiclesList";
 import VehicleInspector from "./VehicleInspector";

@@ -38,7 +38,7 @@ export default function VehicleAnalyticsModal() {
                 <TooltipContent align="end" side="right">{moment(firstMilestone.complete_date).format("YYYY-MM-DD")}</TooltipContent>
               </Tooltip>
             </div>}
-            
+
             {recentMilestone && <div>
               <p>Recent Milestone</p>
               <Tooltip>
@@ -51,7 +51,7 @@ export default function VehicleAnalyticsModal() {
           </div>}
         </div>
         <div className="bg-bg-secondary/50 border border-label-secondary/25 row-span-9">
-          <ProdTimelineChart milestones={vehicle?.milestones??[]} />
+          <ProdTimelineChart milestones={vehicle?.milestones??[]} vehicleNameShort={vehicle?vehicle.type[0]+vehicle.serial_number:""} />
         </div>
       </div>
 
@@ -61,22 +61,23 @@ export default function VehicleAnalyticsModal() {
 }
 
 
-const ProdTimelineChart = ({ milestones }: { milestones: VehicleMilestone[] }) => {
-  const data = milestones
+const ProdTimelineChart = ({ milestones, vehicleNameShort }: { milestones: VehicleMilestone[], vehicleNameShort: string }) => {
+  const correctedMilestones = milestones
   .filter(ms => ms.complete && moment(ms.complete_date, "YYYY-MM-DD", true).isValid())
-  .sort((a,b) => moment(a.complete_date).diff(moment(b.complete_date)))
-  .map(ms => {
-    const baseDate = moment(milestones[0].complete_date);
+  .sort((a,b) => moment(a.complete_date).diff(moment(b.complete_date)));
+
+  const data = correctedMilestones.map(ms => {
+    const baseDate = moment(correctedMilestones[0].complete_date);
 
     return {
-      milestone: ms.name.toUpperCase(),
+      milestone: ms.name.toUpperCase().replace("LANDING TANK", "LT"),
       day: moment(ms.complete_date).diff(baseDate, "days")
     };
   })
 
   return (
     <ResponsiveContainer height={300-.2}>
-      <p className="w-sm font-bold uppercase mb-2 mt-3 ms-3">Milestone Graph</p>
+      <p className="w-sm font-bold uppercase mb-2 mt-3 ms-3">Milestone Graph ({vehicleNameShort})</p>
       <LineChart data={data} margin={{ top: 12, right: 24, bottom: 14, left: 12 }}>
         <XAxis interval={0} dataKey="milestone" label={{ value: "Milestone", position: "insideBottom", offset: 32.5, fill: "#ccc" }} tick={<RotatedTick rotation={-45} textAnchor="end" />} height={90} />
         <YAxis label={{ value: "Days", angle: -90, position: "insideLeft", offset: 5, fill: "#ccc" }} width={55} tick={<RotatedTick dy={6} />} />
@@ -134,7 +135,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
 
   return (
     <div className="bg-bg-secondary/50 backdrop-blur-lg border border-label-primary/30 w-fit p-2 shadow-lg">
-      <p className="font-medium text-label-primary">{label}</p>
+      <p className="font-medium text-label-primary">{label.replace(" LT"," LANDING TANK")}</p>
 
       {payload.map((entry, i) =>
         <p key={i} className="uppercase font-consolas font-bold text-label-secondary/75">{entry.name}: <span>{entry.value}</span></p>

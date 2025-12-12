@@ -3,7 +3,7 @@
 import Section from "./UI/section";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./UI/tooltip";
 import { Button } from "./UI/Button";
-import { CalendarRangeIcon, ChartNoAxesCombinedIcon, LocateFixedIcon } from "lucide-react";
+import { CalendarRangeIcon, ChartNoAxesCombinedIcon, ChevronDownIcon, LocateFixedIcon } from "lucide-react";
 import { getVehicleStatusClass, groupPOIsByLocation } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import VehicleStackingDiagram from "./VehicleStackingDiagram";
@@ -13,11 +13,12 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import * as THREE from "three";
 import { createClient } from "@/utils/supabase/client";
 import moment from "moment-timezone";
-import { VehicleMilestone } from "@/lib/types";
+import { VehicleMilestone, VehicleStatus } from "@/lib/types";
 import { UUID } from "crypto";
-import { pois } from "@/lib/tempData";
+import { locationPresets, pois } from "@/lib/tempData";
 import { Dialog, DialogTrigger } from "./UI/dialog";
 import VehicleAnalyticsModal from "./VehicleAnalyticsModal";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "./UI/dropdown-menu";
 
 
 export default function VehicleInspector() {
@@ -109,149 +110,226 @@ export default function VehicleInspector() {
     }).eq("id", vehicle.id);
   }
 
+
+  const setVehiclePosition = async (newPos: { x: number, y: number, z: number }, location: string) => {
+    if (!vehicle || !newPos || !location) return;
+
+    await supabase.from("vehicles").update({
+      position: newPos,
+      location: location
+    }).eq("id", vehicle.id);
+  }
+
+
+  const setVehicleStatus = async (newStatus: VehicleStatus) => {
+    if (!vehicle || !newStatus) return;
+
+    await supabase.from("vehicles").update({
+      status: newStatus
+    }).eq("id", vehicle.id);
+  }
+
   if (!vehicle) return;
 
   return (
     <div className="flex gap-2">
       {stackingDiagramActive && <VehicleStackingDiagram vehicle={vehicle} closeDiagram={() => setStackingDiagramActive(false)} />}
     
-      <Section className={`${!vehicle?"opacity-0":"opacity-100"} transition-opacity w-sm h-fit`}>
-        
-        <div className="flex items-center justify-between">
-          <div className="uppercase font-bold">
-            <h2 className="text-2xl">{vehicle.type} {vehicle.serial_number}</h2>
-            <h3 className="font-consolas text-label-secondary">{vehicle.location}</h3>
-          </div>
+      <Section className={`${!vehicle?"opacity-0":"opacity-100"} transition-opacity w-sm max-h-[calc(100dvh-2rem)] scrollbar overflow-y-auto`}>
+        <div className="flex flex-col gap-3">
 
-          <div className="flex gap-1">
-            <Tooltip>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <TooltipTrigger asChild>
-                    <Button className="w-fit p-3">
-                      <ChartNoAxesCombinedIcon className="w-5 h-5" />
-                    </Button>
-                  </TooltipTrigger>
-                </DialogTrigger>
-                  
+          <div className="flex items-center justify-between">
+            <div className="uppercase font-bold">
+              <h2 className="text-2xl">{vehicle.type} {vehicle.serial_number}</h2>
+              <h3 className="font-consolas text-label-secondary">{vehicle.location}</h3>
+            </div>
+
+            <div className="flex gap-1">
+              <Tooltip>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <TooltipTrigger asChild>
+                      <Button className="w-fit p-3">
+                        <ChartNoAxesCombinedIcon className="w-5 h-5" />
+                      </Button>
+                    </TooltipTrigger>
+                  </DialogTrigger>
+                    
+                  <TooltipContent side="bottom">
+                    <p>Vehicle Analytics</p>
+                  </TooltipContent>
+
+                  <VehicleAnalyticsModal />
+                </Dialog>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button className={`w-fit p-3 ${stackingDiagramActive?"bg-accent/50 hover:bg-accent":""}`} onClick={() => setStackingDiagramActive(prev => !prev)}>
+                    <CalendarRangeIcon className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <p>Vehicle Analytics</p>
+                  <p>Stacking Diagram</p>
                 </TooltipContent>
+              </Tooltip>
 
-                <VehicleAnalyticsModal />
-              </Dialog>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button className={`w-fit p-3 ${stackingDiagramActive?"bg-accent/50 hover:bg-accent":""}`} onClick={() => setStackingDiagramActive(prev => !prev)}>
-                  <CalendarRangeIcon className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Stacking Diagram</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button className="w-fit p-3">
-                  <LocateFixedIcon className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Locate</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-
-        <p className={`font-consolas font-bold uppercase -my-2 ${vehicle&&getVehicleStatusClass(vehicle?.status)}`}>{vehicle?.status}</p>
-
-        <hr className="text-label-secondary/25" />
-
-        <div className="uppercase">
-          <p className="font-bold">Stats</p>
-          <div className="grid grid-cols-2 gap-y-1 mt-1 font-medium">
-            <div>
-              <p>Flights</p>
-              <p className="font-consolas font-bold text-label-secondary/75 -mt-1">0</p>
-            </div>
-            <div>
-              <p>Cryo Tests</p>
-              <p className="font-consolas font-bold text-label-secondary/75 -mt-1">0</p>
-            </div>
-            <div>
-              <p>Barrels</p>
-              <p className="font-consolas font-bold text-label-secondary/75 -mt-1">{vehicle.milestones.filter(ms => ms.barrel && ms.complete).length}/{vehicle.milestones.filter(ms => ms.barrel).length}</p>
-            </div>
-            <div>
-              <p>Static Fires</p>
-              <p className="font-consolas font-bold text-label-secondary/75 -mt-1">0</p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button className="w-fit p-3">
+                    <LocateFixedIcon className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Locate</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
-        </div>
 
-        <hr className="text-label-secondary/25" />
+          <p className={`font-consolas font-bold uppercase -my-2 ${vehicle&&getVehicleStatusClass(vehicle?.status)}`}>{vehicle?.status}</p>
 
-        <div className="uppercase">
-          <p className="font-bold">Edit Milestones</p>
-          <div className="flex flex-col gap-1 mt-1 font-medium">
-            {vehicle.milestones.map(ms =>
-              <VehicleMilestoneEditor key={ms.name} ms={ms} editMilestone={(newChecked, newDate) => editVehicleMilestone(ms.name, newChecked, newDate)} />
-            )}
-          </div>
-        </div>
+          <hr className="text-label-secondary/25" />
 
-        <hr className="text-label-secondary/25" />
-
-        <div className="uppercase">
-          <p className="font-bold">Transport</p>
-          <div className="flex flex-col gap-1 mt-1 font-medium">
-            <p>Route</p>
-            <Select onValueChange={(val) => setTransportRoute(val)} value={transportRoute} disabled={vehicleTransport!=null}>
-              <SelectTrigger className="font-bold font-consolas uppercase text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 w-full mb-2">
-                <SelectValue></SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>{Object.entries(routes).length==0?"No Routes for this POI":"Choose Route"}</SelectLabel>
-                    {Object.entries(routes).map(([name,]) =>
-                      <SelectItem key={name} value={name}>{name.split("ROUTE_")[1].replace("-", " → ")}</SelectItem>
-                    )}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-
-            {!vehicleTransport && <Button className="py-1 font-consolas uppercase hover:bg-success/50" disabled={!transportRoute} onClick={() => addTransport()}>Start</Button>}
-            {vehicleTransport && <div className="px-2 py-1 flex justify-between items-center font-consolas font-bold bg-bg-secondary/50 backdrop-blur-lg border border-label-primary/30 relative">
-              <p>{vehicleTransportProgress==0?"Prepping Transport...":(vehicleTransportProgress==1?"Transport Complete":"Driving...")}</p>
-              <p className="lowercase">{(vehicleTransportProgress * 100).toFixed(1)}%</p>
-              <div className="absolute start-0 top-0 h-full bg-success/25 -z-1 pointer-events-none" style={{ width: `${vehicleTransportProgress*100}%` }}></div>
-            </div>}
-            {vehicleTransport && <Button className="py-1 font-consolas uppercase bg-danger/25 hover:bg-danger/50" onClick={() => stopTransport()}>Stop</Button>}
+          <div className="uppercase">
+            <p className="font-bold">Stats</p>
+            <div className="grid grid-cols-2 gap-y-1 mt-1 font-medium">
+              <div>
+                <p>Flights</p>
+                <p className="font-consolas font-bold text-label-secondary/75 -mt-1">0</p>
+              </div>
+              <div>
+                <p>Cryo Tests</p>
+                <p className="font-consolas font-bold text-label-secondary/75 -mt-1">0</p>
+              </div>
+              <div>
+                <p>Barrels</p>
+                <p className="font-consolas font-bold text-label-secondary/75 -mt-1">{vehicle.milestones.filter(ms => ms.barrel && ms.complete).length}/{vehicle.milestones.filter(ms => ms.barrel).length}</p>
+              </div>
+              <div>
+                <p>Static Fires</p>
+                <p className="font-consolas font-bold text-label-secondary/75 -mt-1">0</p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1 mt-1 font-medium">
-            <p>Site</p>
-            <Select onValueChange={(val) => setVehicleSite(val)} value={vehicleSite}>
-              <SelectTrigger className="font-bold font-consolas uppercase text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 w-full mb-2">
-                <SelectValue></SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {groupPOIsByLocation(pois).map((poiGroup, i) =>
-                  <SelectGroup key={poiGroup.location} className={i>0?"mt-2":""}>
-                    <SelectLabel>{poiGroup.location}</SelectLabel>
-                      {poiGroup.sites.map(site =>
-                        <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+          <hr className="text-label-secondary/25" />
+
+          <div className="uppercase">
+            <p className="font-bold">Edit Details</p>
+            <div className="flex flex-col gap-1 mt-1 font-medium">
+              <div>
+                <p>Status</p>
+                <Select value={vehicle.status} onValueChange={(newStatus) => setVehicleStatus(newStatus as VehicleStatus)}>
+                  <SelectTrigger className="font-bold font-consolas uppercase text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 w-full mb-2">
+                    <SelectValue></SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Vehicle Status</SelectLabel>
+                      <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="retired">Retired</SelectItem>
+                      <SelectItem value="destroyed">Destroyed</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              {poi && <div>
+                <p>Location</p>
+                <p className="font-consolas font-bold text-label-secondary/75 -mt-1">{vehicle.position.x.toFixed(2)}, {vehicle.position.y.toFixed(2)}, {vehicle.position.z.toFixed(2)}</p>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="cursor-pointer flex justify-between items-center bg-bg-secondary/50 backdrop-blur-lg border border-label-primary/30 py-1 px-2 w-full uppercase font-consolas font-bold text-label-secondary/75">
+                      <p>Move To</p>
+                      <ChevronDownIcon className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-80">
+                    <DropdownMenuLabel>Location</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      {Object.entries(locationPresets[poi.id]).map(([location, sublocations]) =>
+                        <DropdownMenuSub key={location}>
+                          <DropdownMenuSubTrigger>{location[0].toUpperCase()}{location.slice(1,)}</DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent className="w-60">
+                              <DropdownMenuLabel>{location}</DropdownMenuLabel>
+                              {Object.entries(sublocations).map(([sublocation, value]) =>
+                                <DropdownMenuItem key={sublocation} onClick={() => setVehiclePosition(value, location)}>{sublocation[0].toUpperCase()}{sublocation.slice(1,)}</DropdownMenuItem>
+                              )}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                      )}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>}
+            </div>
+          </div>
+
+          <hr className="text-label-secondary/25" />
+
+          <div className="uppercase">
+            <p className="font-bold">Edit Milestones</p>
+            <div className="flex flex-col gap-1 mt-1 font-medium">
+              {vehicle.milestones.map(ms =>
+                <VehicleMilestoneEditor key={ms.name} ms={ms} editMilestone={(newChecked, newDate) => editVehicleMilestone(ms.name, newChecked, newDate)} />
+              )}
+            </div>
+          </div>
+
+          <hr className="text-label-secondary/25" />
+
+          <div className="uppercase">
+            <p className="font-bold">Transport</p>
+            <div className="flex flex-col gap-1 mt-1 font-medium">
+              <p>Route</p>
+              <Select onValueChange={(val) => setTransportRoute(val)} value={transportRoute} disabled={vehicleTransport!=null}>
+                <SelectTrigger className="font-bold font-consolas uppercase text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 w-full mb-2">
+                  <SelectValue></SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>{Object.entries(routes).length==0?"No Routes for this POI":"Choose Route"}</SelectLabel>
+                      {Object.entries(routes).map(([name,]) =>
+                        <SelectItem key={name} value={name}>{name.split("ROUTE_")[1].replace("-", " → ")}</SelectItem>
                       )}
                   </SelectGroup>
-                )}
-              </SelectContent>
-            </Select>
+                </SelectContent>
+              </Select>
 
-            <Button className="py-1 font-consolas uppercase hover:bg-success/50" disabled={!vehicleSite} onClick={() => changeVehicleSite()}>Teleport</Button>
+              {!vehicleTransport && <Button className="py-1 font-consolas uppercase hover:bg-success/50" disabled={!transportRoute} onClick={() => addTransport()}>Start</Button>}
+              {vehicleTransport && <div className="px-2 py-1 flex justify-between items-center font-consolas font-bold bg-bg-secondary/50 backdrop-blur-lg border border-label-primary/30 relative">
+                <p>{vehicleTransportProgress==0?"Prepping Transport...":(vehicleTransportProgress==1?"Transport Complete":"Driving...")}</p>
+                <p className="lowercase">{(vehicleTransportProgress * 100).toFixed(1)}%</p>
+                <div className="absolute start-0 top-0 h-full bg-success/25 -z-1 pointer-events-none" style={{ width: `${vehicleTransportProgress*100}%` }}></div>
+              </div>}
+              {vehicleTransport && <Button className="py-1 font-consolas uppercase bg-danger/25 hover:bg-danger/50" onClick={() => stopTransport()}>Stop</Button>}
+            </div>
+
+            <div className="flex flex-col gap-1 mt-1 font-medium">
+              <p>Site</p>
+              <Select onValueChange={(val) => setVehicleSite(val)} value={vehicleSite}>
+                <SelectTrigger className="font-bold font-consolas uppercase text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 w-full mb-2">
+                  <SelectValue></SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {groupPOIsByLocation(pois).map((poiGroup, i) =>
+                    <SelectGroup key={poiGroup.location} className={i>0?"mt-2":""}>
+                      <SelectLabel>{poiGroup.location}</SelectLabel>
+                        {poiGroup.sites.map(site =>
+                          <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+                        )}
+                    </SelectGroup>
+                  )}
+                </SelectContent>
+              </Select>
+
+              <Button className="py-1 font-consolas uppercase hover:bg-success/50" disabled={!vehicleSite} onClick={() => changeVehicleSite()}>Teleport</Button>
+            </div>
           </div>
+
         </div>
       </Section>
     </div>

@@ -165,12 +165,31 @@ export const vehicle_configs: VehicleConfig[] = [
 
 
 
-// poi.id, building/area, bay
-const position_presets = {
-  "96dde332-05ea-49ca-8470-aab5eadd7685, megabay 2, bay 1": { x: -199, y: 0, z: -10.6 },
-  "96dde332-05ea-49ca-8470-aab5eadd7685, megabay 2, bay 2": { x: -184.4, y: 0, z: -10.6 },
-  "96dde332-05ea-49ca-8470-aab5eadd7685, megabay 2, bay 3": { x: -169.8, y: 0, z: -10.6 },
-  "96dde332-05ea-49ca-8470-aab5eadd7685, megabay 2, bay 4": { x: -199, y: 0, z: 4 },
-  "96dde332-05ea-49ca-8470-aab5eadd7685, megabay 2, bay 5": { x: -184.4, y: 0, z: 4 },
-  "96dde332-05ea-49ca-8470-aab5eadd7685, megabay 2, bay 6": { x: -169.8, y: 0, z: 4 },
+type LocationPresets = {
+  [poiId: string]: {
+    [location: string]: {
+      [sublocation: string]: { x: number; y: number; z: number }
+    }
+  }
+}
+
+export const locationPresets: LocationPresets = {
+  "96dde332-05ea-49ca-8470-aab5eadd7685": {
+    "megabay 2": {
+      "bay 1": { x: -199, y: 0, z: -10.6 },
+      "bay 2": { x: -184.4, y: 0, z: -10.6 },
+      "bay 3": { x: -169.8, y: 0, z: -10.6 },
+      "bay 4": { x: -199, y: 0, z: 4 },
+      "bay 5": { x: -184.4, y: 0, z: 4 },
+      "bay 6": { x: -169.8, y: 0, z: 4 },
+    }, // 15.75
+    "megabay 1": {
+      "bay 1": { x: -234.277, y: 0, z: 99.5445 },
+      "bay 2": { x: -234.277, y: 0, z: 83.7945 },
+      "bay 3": { x: -234.277, y: 0, z: 68.0445 },
+      "bay 4": { x: -216.35, y: 0, z: 99.5445 },
+      "bay 5": { x: -216.35, y: 0, z: 83.7945 },
+      "bay 6": { x: -216.35, y: 0, z: 68.0445 },
+    }
+  }
 }

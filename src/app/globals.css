@@ -30,6 +30,7 @@
 
 @supports (scrollbar-width: thin) {
   .scrollbar {
+    scrollbar-width: thin;
     scrollbar-color: #cccccc32 transparent;
   }
 }

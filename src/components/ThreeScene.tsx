@@ -10,6 +10,7 @@ import SBProductionSite from "./models/SBProductionSite";
 import Ship from "./models/Ship";
 import SBLaunchSite from "./models/SBLaunchSite";
 import { useGlobals } from "./ContextProviders/GlobalsProvider";
+import Booster from "./models/Booster";
 
 
 
@@ -77,7 +78,7 @@ export default function ThreeScene() {
 
           {poiVehicles.map(vehicle => {
             if (vehicle.type=="ship") return <Ship key={vehicle.id} vehicle={vehicle} />
-            // else if (vehicle.type=="booster") return <Booster />
+            else if (vehicle.type=="booster") return <Booster key={vehicle.id} vehicle={vehicle} />
           })}
         </Suspense>
       </Canvas>
