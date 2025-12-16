@@ -184,7 +184,7 @@ export const locationPresets: LocationPresets = {
   },
   "da41c0c8-7a89-4962-b190-ab0d8a634659": {
     "pad 2": {
-      "Stacking Station": { x: -192.67414944075688, y: 0, z: 46.5511090875113, r: 90 },
+      "Stacking Station": { x: -196.116, y: 0, z: 46.5511090875113, r: 90-4 },
       "OLM": { x: -208.761, y: 10.1417, z: 62.4059, r: 190 },
       "OLM Ship": { x: -208.761, y: 10.1417+68.8029, z: 62.4059, r: 10 },
     }

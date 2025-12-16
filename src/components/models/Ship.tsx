@@ -3,7 +3,7 @@
 import { Vehicle } from "@/lib/types";
 import { Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { degToRad } from "three/src/math/MathUtils.js";
+import { degToRad, radToDeg } from "three/src/math/MathUtils.js";
 import { useGlobals } from "../ContextProviders/GlobalsProvider";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -30,26 +30,23 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
       vehicleRef.current.getWorldPosition(worldPos);
       vehicleRef.current.getWorldQuaternion(worldQuat);
 
-      worldScene.attach(vehicleRef.current);
-
-      vehicleRef.current.position.copy(worldPos);
-      vehicleRef.current.quaternion.copy(worldQuat);
-
       await supabase.from("vehicles").update({
         position: {
           x: worldPos.x,
           y: worldPos.y,
           z: worldPos.z,
         },
-        rotation: new THREE.Euler().setFromQuaternion(worldQuat).y.toFixed()
+        rotation: radToDeg(new THREE.Euler().setFromQuaternion(worldQuat).y).toFixed()
       }).eq("id", vehicle.id);
     }
 
     if (poi.config["pad2_chopstick_vehicle"] == vehicle.id) {
-      vehicleRef.current.position.set(0,-38,0);
       chopstickVehicleMarker.attach(vehicleRef.current);
+      vehicleRef.current.position.set(0,-38,0);
+      vehicleRef.current.rotation.set(0,degToRad(180-4),0); // 180deg offset for ship
     }
     else if (vehicleRef.current.position.y == -38) {
+      worldScene.attach(vehicleRef.current);
       savePos();
     }
 
@@ -79,6 +76,10 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
 
   pos.y += standYOffset;
 
+  useEffect(() => { vehicleRef.current?.position.set(pos.x, pos.y, pos.z) }, [vehicle.stand, vehicle.position]);
+
+  useEffect(() => { if (vehicleRef.current) vehicleRef.current.rotation.y = degToRad(vehicle.rotation); }, [vehicle.rotation]);
+
 
 
   useFrame(() => {
@@ -93,7 +94,7 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
     vehicleRef.current.position.copy(point);
 
     // rotation
-    const tangent = route.getTangentAt(progress).normalize().multiplyScalar(-1);  // rotate 180deg
+    const tangent = route.getTangentAt(progress).normalize().multiplyScalar(-1);  // 180deg offset for ship
     const lookAtTarget = point.clone().add(tangent);
     vehicleRef.current.lookAt(lookAtTarget);
   });
@@ -101,8 +102,8 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
   return (
     <group ref={vehicleRef}
       onPointerEnter={() => setHoverLabel(true)} onPointerLeave={() => setHoverLabel(false)}
-      position={poi?.config["pad2_chopstick_vehicle"] == vehicle.id?undefined:pos}
-      rotation={poi?.config["pad2_chopstick_vehicle"] == vehicle.id?undefined:new THREE.Euler(0,degToRad(vehicle.rotation),0)}
+      // position={poi?.config["pad2_chopstick_vehicle"] == vehicle.id?undefined:pos}
+      // rotation={poi?.config["pad2_chopstick_vehicle"] == vehicle.id?undefined:new THREE.Euler(0,degToRad(vehicle.rotation),0)}
     >
       <primitive object={scene} />
       {vehicle.stand && <primitive object={standGLTF.scene} />}
