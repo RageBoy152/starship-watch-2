@@ -5,15 +5,55 @@ import { Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { degToRad } from "three/src/math/MathUtils.js";
 import { useGlobals } from "../ContextProviders/GlobalsProvider";
-import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Section from "../UI/section";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Ship({ vehicle }: { vehicle: Vehicle }) {
-  const { transports, routes } = useGlobals();
+  const { transports, routes, chopstickVehicleMarker, poi } = useGlobals();
   const { scene } = useGLTF(`/models/vehicles/${vehicle.vehicle_config}/${vehicle.vehicle_config}.gltf`);
+  const { scene: worldScene } = useThree();
   const vehicleRef = useRef<THREE.Group|null>(null);
   const [hoverLabel, setHoverLabel] = useState(false);
+  const supabase = createClient();
+
+
+  useEffect(() => {
+    if (!vehicleRef.current || !chopstickVehicleMarker || !poi) return;
+
+    const savePos = async () => {
+      if (!vehicleRef.current) return;
+      const worldPos = new THREE.Vector3();
+      const worldQuat = new THREE.Quaternion();
+
+      vehicleRef.current.getWorldPosition(worldPos);
+      vehicleRef.current.getWorldQuaternion(worldQuat);
+
+      worldScene.attach(vehicleRef.current);
+
+      vehicleRef.current.position.copy(worldPos);
+      vehicleRef.current.quaternion.copy(worldQuat);
+
+      await supabase.from("vehicles").update({
+        position: {
+          x: worldPos.x,
+          y: worldPos.y,
+          z: worldPos.z,
+        },
+        rotation: new THREE.Euler().setFromQuaternion(worldQuat).y.toFixed()
+      }).eq("id", vehicle.id);
+    }
+
+    if (poi.config["pad2_chopstick_vehicle"] == vehicle.id) {
+      vehicleRef.current.position.set(0,-38,0);
+      chopstickVehicleMarker.attach(vehicleRef.current);
+    }
+    else if (vehicleRef.current.position.y == -38) {
+      savePos();
+    }
+
+  }, [chopstickVehicleMarker, poi]);
 
   vehicle.milestones.forEach(ms => {
     const objParent = scene.getObjectByName(ms.name.replace(":","_").replace(" ","_"));
@@ -59,7 +99,11 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
   });
 
   return (
-    <group ref={vehicleRef} onPointerEnter={() => setHoverLabel(true)} onPointerLeave={() => setHoverLabel(false)} position={pos} rotation={new THREE.Euler(0,degToRad(vehicle.rotation),0)}>
+    <group ref={vehicleRef}
+      onPointerEnter={() => setHoverLabel(true)} onPointerLeave={() => setHoverLabel(false)}
+      position={poi?.config["pad2_chopstick_vehicle"] == vehicle.id?undefined:pos}
+      rotation={poi?.config["pad2_chopstick_vehicle"] == vehicle.id?undefined:new THREE.Euler(0,degToRad(vehicle.rotation),0)}
+    >
       <primitive object={scene} />
       {vehicle.stand && <primitive object={standGLTF.scene} />}
       {hoverLabel && <Html center position={[0,20,0]} className="pointer-events-none">

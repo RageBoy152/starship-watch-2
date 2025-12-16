@@ -192,22 +192,24 @@ export const locationPresets: LocationPresets = {
 }
 
 
-type ChopstickPresets = {
-  [name: string]: { c: number; l: number; r: number }
-}
-export const chopstickPresets: ChopstickPresets = {
-  "Ship Open (Launch)": { c: 105, l: 40, r: 40 },
-  "Ship Closed": { c: 105, l: 0, r: 0 },
+// type ChopstickPresets = {
+//   [name: string]: { c: number; l: number; r: number }
+// }
+// export const chopstickPresets: ChopstickPresets = {
+//   "Ship Open (Launch)": { c: 105, l: 40, r: 40 },
+//   "Ship Closed": { c: 105, l: 0, r: 0 },
   
-  "Booster Open": { c: 63.5, l: 40, r: 40 },
-  "Booster Closed": { c: 63.5, l: 0, r: 0 },
+//   "Booster Open": { c: 63.5, l: 40, r: 40 },
+//   "Booster Closed": { c: 63.5, l: 0, r: 0 },
   
-  "Ship Lift Partial open": { c: 24, l: 79.3, r: -71.3 },
-  "Ship Lift Closed": { c: 24, l: 75.3, r: -75.3 },
+//   "Ship Lift Partial open": { c: 24, l: 79.3, r: -71.3 },
+//   "Ship Lift Closed": { c: 24, l: 75.3, r: -75.3 },
   
-  "Booster Lift Partial open": { c: 54, l: 79.3, r: -71.3 },
-  "Booster Lift Closed": { c: 54, l: 75.3, r: -75.3 },
+//   "Booster Lift Partial open": { c: 54, l: 79.3, r: -71.3 },
+//   "Booster Lift Closed": { c: 54, l: 75.3, r: -75.3 },
   
-  "OLM Open": { c: 24, l: 40, r: 40 },
-  "OLM Closed": { c: 24, l: 0, r: 0 },
-}
+//   "OLM Open": { c: 24, l: 40, r: 40 },
+//   "OLM Closed": { c: 24, l: 0, r: 0 },
+// }
+
+export const ChopstickHeights = [24, 28.1, 54, 63.5, 107.39]

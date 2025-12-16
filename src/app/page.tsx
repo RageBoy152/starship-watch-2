@@ -11,7 +11,8 @@ export const defaultPOI: POI = {
   longitude: -80.66773818318366,
   latitude: 28.543132193815936,
   file_name: "",
-  config: {}
+  config: {},
+  last_updated: ""
 };
 
 export const defaultVehicle: Vehicle = {

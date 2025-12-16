@@ -15,6 +15,8 @@ type GlobalsContextType = {
   transports: Transport[]
   routes: Record<string, THREE.CatmullRomCurve3>
   POIs: POI[]
+  chopstickVehicleMarker: THREE.Object3D|null
+  setChopstickVehicleMarker: Dispatch<SetStateAction<THREE.Object3D|null>>
   poi?: POI
 }
 
@@ -36,6 +38,7 @@ export const GlobalsProvider = ({ children, poi: _poi }: { children: React.React
   const [routes, setRoutes] = useState<Record<string, THREE.CatmullRomCurve3>>({});
   const [POIs, setPOIs] = useState<POI[]>([]);
   const [poi, setPOI] = useState<POI|undefined>(_poi);
+  const [chopstickVehicleMarker, setChopstickVehicleMarker] = useState<THREE.Object3D|null>(null);
 
   useEffect(() => { activeVehicleRef.current = activeVehicle; }, [activeVehicle]);
 
@@ -180,7 +183,7 @@ export const GlobalsProvider = ({ children, poi: _poi }: { children: React.React
   }, [_poi]);
 
   return (
-    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi, POIs }}>
+    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi, POIs, chopstickVehicleMarker, setChopstickVehicleMarker }}>
       {children}
     </GlobalsContext.Provider>
   );

@@ -10,6 +10,7 @@ export type POI = {
   latitude: number
   file_name: string
   config: Record<string, any>
+  last_updated: string
 }
 
 export type GroupedLocation = {

@@ -71,8 +71,8 @@ export default function ThreeScene() {
         />
 
         <Suspense fallback={null}>
-          {poi?.id == "0403e1dc-fe0e-401d-835e-092bbfde8772" && <SBProductionSite config={poi.config} />}
-          {poi?.id == "da41c0c8-7a89-4962-b190-ab0d8a634659" && <SBLaunchSite config={poi.config} />}
+          {poi?.id == "0403e1dc-fe0e-401d-835e-092bbfde8772" && <SBProductionSite config={poi.config} last_updated={poi.last_updated} />}
+          {poi?.id == "da41c0c8-7a89-4962-b190-ab0d8a634659" && <SBLaunchSite config={poi.config} last_updated={poi.last_updated} />}
 
           {poiVehicles.map(vehicle => {
             if (vehicle.type=="ship") return <Ship key={vehicle.id} vehicle={vehicle} />

@@ -4,6 +4,7 @@ import { useGlobals } from "./ContextProviders/GlobalsProvider";
 import Section from "./UI/section";
 import SBLaunchSiteInspector from "./POIInspectors/SBLaunchSiteInspector";
 import { createClient } from "@/utils/supabase/client";
+import moment from "moment-timezone";
 
 
 export type POIInspectorProps = {
@@ -18,7 +19,8 @@ export default function POIInspector() {
     if (!poi) return;
 
     await supabase.from("pois").update({
-      config: { ...poi.config, [key]: value }
+      config: { ...poi.config, [key]: value },
+      last_updated: moment().toISOString()
     }).eq("id", poi.id);
   }
 

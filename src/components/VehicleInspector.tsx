@@ -119,6 +119,8 @@ export default function VehicleInspector() {
   const setVehiclePosition = async (newPos: { x: number, y: number, z: number, r?: number }, location: string) => {
     if (!vehicle || !newPos || !location) return;
 
+    console.log(`New Rotation: ${newPos.r!=undefined ? newPos.r : vehicle.rotation}`);
+
     await supabase.from("vehicles").update({
       position: { x: newPos.x, y: newPos.y, z: newPos.z },
       location: location,
