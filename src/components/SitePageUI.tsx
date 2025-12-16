@@ -1,3 +1,4 @@
+import POIInspector from "./POIInspector";
 import SitePageHeading from "./SitePageHeading";
 import SitePageVehiclesList from "./SitePageVehiclesList";
 import VehicleInspector from "./VehicleInspector";
@@ -11,6 +12,7 @@ export default function SitePageUI() {
         <SitePageVehiclesList />
       </div>
       <div>
+        <POIInspector />
         <VehicleInspector />
       </div>
     </div>

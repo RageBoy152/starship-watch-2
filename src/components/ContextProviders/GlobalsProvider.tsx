@@ -14,6 +14,7 @@ type GlobalsContextType = {
   poiVehicles: Vehicle[]
   transports: Transport[]
   routes: Record<string, THREE.CatmullRomCurve3>
+  POIs: POI[]
   poi?: POI
 }
 
@@ -25,7 +26,7 @@ export const useGlobals = () => {
   return ctx;
 };
 
-export const GlobalsProvider = ({ children, poi }: { children: React.ReactNode, poi?: POI }) => {
+export const GlobalsProvider = ({ children, poi: _poi }: { children: React.ReactNode, poi?: POI }) => {
   const supabase = createClient();
 
   const [activeVehicle, setActiveVehicle] = useState<Vehicle|null>(null);
@@ -33,6 +34,8 @@ export const GlobalsProvider = ({ children, poi }: { children: React.ReactNode, 
   const [poiVehicles, setPOIVehicles] = useState<Vehicle[]>([]);
   const [transports, setTransports] = useState<Transport[]>([]);
   const [routes, setRoutes] = useState<Record<string, THREE.CatmullRomCurve3>>({});
+  const [POIs, setPOIs] = useState<POI[]>([]);
+  const [poi, setPOI] = useState<POI|undefined>(_poi);
 
   useEffect(() => { activeVehicleRef.current = activeVehicle; }, [activeVehicle]);
 
@@ -51,6 +54,15 @@ export const GlobalsProvider = ({ children, poi }: { children: React.ReactNode, 
       }
 
 
+      // get POIs from db
+      const { data: pois, error: poisErr } = await supabase.from("pois").select();
+      if (poisErr || !pois) {
+        console.error(poisErr);
+        return "Error fetching POIs";
+      }
+      else setPOIs(pois as POI[]);
+
+
       // get transports from db
       if (poi) {
         const { data: transports, error: transportsErr } = await supabase.from("transports").select().eq("poi", poi.id)
@@ -62,9 +74,9 @@ export const GlobalsProvider = ({ children, poi }: { children: React.ReactNode, 
       }
 
 
-      // get routes from /models/poi.fileName/routes.gltf
+      // get routes from /models/poi.file_name/routes.gltf
       const loader = new GLTFLoader();
-      loader.load(`/models/${poi?.fileName}/routes.gltf`, gltf => {
+      loader.load(`/models/${poi?.file_name}/routes.gltf`, gltf => {
         const foundRoutes: Record<string, THREE.CatmullRomCurve3> = {};
 
         gltf.scene.traverse(_obj => {
@@ -82,11 +94,16 @@ export const GlobalsProvider = ({ children, poi }: { children: React.ReactNode, 
               pts.push(p);
             }
 
-            const rotation = new THREE.Euler(0, Math.PI, 0); // 180° around Y
-            for (let i = 0; i < pts.length; i++) {
-              pts[i].applyEuler(rotation);
+
+            // rotate 180 around y for SBprodsite
+            if (poi?.id == "0403e1dc-fe0e-401d-835e-092bbfde8772") {
+              const rotation = new THREE.Euler(0, Math.PI, 0);
+              for (let i = 0; i < pts.length; i++) {
+                pts[i].applyEuler(rotation);
+              }
             }
 
+            
             foundRoutes[obj.name] = new THREE.CatmullRomCurve3(pts, false);
           }
         });
@@ -107,7 +124,15 @@ export const GlobalsProvider = ({ children, poi }: { children: React.ReactNode, 
         if (payload.eventType == "INSERT") return [...prev, payload.new as Vehicle];
         else if (payload.eventType == "UPDATE") {
           if (activeVehicleRef.current?.id == payload.new.id) setActiveVehicle(payload.new as Vehicle);
-          return prev.map(vehicle => vehicle.id == payload.new.id ? (payload.new as Vehicle) : vehicle);
+          
+          let prevFiltered = prev;
+          if (payload.new.poi != poi?.id) {
+            prevFiltered = prevFiltered.filter(vehicle => vehicle.id != payload.new.id);
+            if (activeVehicleRef.current?.id == payload.new.id) setActiveVehicle(null);
+          }
+          if (payload.new.poi == poi?.id && !prevFiltered.find(vehicle => vehicle.id == payload.new.id)) prevFiltered = [...prevFiltered, payload.new as Vehicle]
+
+          return prevFiltered.map(vehicle => vehicle.id == payload.new.id ? (payload.new as Vehicle) : vehicle);
         }
         else if (payload.eventType == "DELETE") {
           if (activeVehicleRef.current?.id == payload.old.id) setActiveVehicle(null);
@@ -133,15 +158,29 @@ export const GlobalsProvider = ({ children, poi }: { children: React.ReactNode, 
     }).subscribe();
 
 
+    // subscribe to active poi changes
+    const poiChange = supabase.channel("poi-changes").on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "pois"
+    }, (payload) => {
+      setPOI(prev => {
+        if (payload.eventType == "UPDATE" && prev?.id == payload.new.id) return payload.new as POI;
+        else return prev;
+      });
+    }).subscribe();
+
+
     return () => {
       ignore = true;
       supabase.removeChannel(vehicleChange);
       supabase.removeChannel(transportChange);
+      supabase.removeChannel(poiChange);
     }
-  }, []);
+  }, [_poi]);
 
   return (
-    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi }}>
+    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi, POIs }}>
       {children}
     </GlobalsContext.Provider>
   );

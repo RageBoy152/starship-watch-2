@@ -8,7 +8,8 @@ export type POI = {
   location: string
   longitude: number
   latitude: number
-  fileName: string
+  file_name: string
+  config: Record<string, any>
 }
 
 export type GroupedLocation = {
@@ -39,14 +40,17 @@ export type Vehicle = {
   location: string
   poi: UUID
   vehicle_config: ConfigName
+  stand?: string
   milestones: VehicleMilestone[]
 }
 
-export type ConfigName = "booster_v3" | "booster_v2" | "ship_v3"
-export type VehicleConfig = {
-  name: ConfigName
-  // can have other stats etc here ig
+export const stands = {
+  "booster_v3": ["bts_v3"],
+  "booster_v2": [],
+  "ship_v3": [],
 }
+
+export type ConfigName = "booster_v3" | "booster_v2" | "ship_v3"
 
 export type Transport = {
   id: UUID

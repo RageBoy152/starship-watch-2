@@ -14,6 +14,8 @@ export default function GlobeMap({ pois }: { pois: POI[] }) {
   const controls_dev = false;
   return (
     <>
+      {/* <img className='w-screen h-screen z-100' src="StarshipRadar-1765803525077.png" /> */}
+
       <Map
         initialViewState={{
           longitude: -85,

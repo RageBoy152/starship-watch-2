@@ -1,11 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
-import { POI, Transport, Vehicle } from "@/lib/types";
-import { defaultPOI } from "@/app/page";
 import SBProductionSite from "./models/SBProductionSite";
 import Ship from "./models/Ship";
 import SBLaunchSite from "./models/SBLaunchSite";
@@ -45,7 +43,7 @@ export default function ThreeScene() {
   return (
     <div className="absolute h-screen w-screen z-10">
       <Canvas
-        camera={{ position: [0,500,0], fov: 45, near: 1, far: 1000 }} shadows={true} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
+        camera={{ position: [0,500,0], fov: 45, near: 1, far: 3000 }} shadows={true} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
         onPointerDown={(e) => clickPos.current = { x: e.clientX, y: e.clientY }}
         onPointerUp={(e) => {
           if (!clickPos.current) return;
@@ -68,13 +66,13 @@ export default function ThreeScene() {
         <Environment
           background={true}
           backgroundIntensity={1}
-          environmentIntensity={0.1} // optional intensity factor (default: 1, only works with three 0.163 and up)
+          environmentIntensity={0.3} // optional intensity factor (default: 1, only works with three 0.163 and up)
           files="/hdr/kloppenheim_03_puresky_1k.hdr"
         />
 
         <Suspense fallback={null}>
-          {poi?.id == "96dde332-05ea-49ca-8470-aab5eadd7685" && <SBProductionSite />}
-          {poi?.id == "cf98ff6e-c336-4b46-b510-32f436649730" && <SBLaunchSite />}
+          {poi?.id == "0403e1dc-fe0e-401d-835e-092bbfde8772" && <SBProductionSite config={poi.config} />}
+          {poi?.id == "da41c0c8-7a89-4962-b190-ab0d8a634659" && <SBLaunchSite config={poi.config} />}
 
           {poiVehicles.map(vehicle => {
             if (vehicle.type=="ship") return <Ship key={vehicle.id} vehicle={vehicle} />

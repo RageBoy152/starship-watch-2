@@ -1,6 +1,6 @@
 import GlobeMap from "@/components/GlobeMap";
-import { pois } from "@/lib/tempData";
 import { POI, Vehicle } from "@/lib/types";
+import { createClient } from "@/utils/supabase/server";
 import { UUID } from "crypto";
 
 export const defaultPOI: POI = {
@@ -10,7 +10,8 @@ export const defaultPOI: POI = {
   location: "Space Coast, Florida, USA",
   longitude: -80.66773818318366,
   latitude: 28.543132193815936,
-  fileName: ""
+  file_name: "",
+  config: {}
 };
 
 export const defaultVehicle: Vehicle = {
@@ -28,6 +29,13 @@ export const defaultVehicle: Vehicle = {
 
 export default async function Home() {
   // would fetch POIs here
+  const suapabse = await createClient();
+  const { data: poisData, error: poisError } = await suapabse.from("pois").select();
+  if (poisError || !poisData) {
+    console.error(poisError);
+  }
+
+  const pois: POI[] = poisData ? (poisData as POI[]) : [];
 
   return (
     <GlobeMap pois={pois} />

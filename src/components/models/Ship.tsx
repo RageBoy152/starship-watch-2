@@ -1,17 +1,19 @@
 "use client";
 
 import { Vehicle } from "@/lib/types";
-import { useGLTF } from "@react-three/drei";
+import { Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { degToRad } from "three/src/math/MathUtils.js";
 import { useGlobals } from "../ContextProviders/GlobalsProvider";
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useMemo, useRef, useState } from "react";
+import Section from "../UI/section";
 
 export default function Ship({ vehicle }: { vehicle: Vehicle }) {
   const { transports, routes } = useGlobals();
   const { scene } = useGLTF(`/models/vehicles/${vehicle.vehicle_config}/${vehicle.vehicle_config}.gltf`);
   const vehicleRef = useRef<THREE.Group|null>(null);
+  const [hoverLabel, setHoverLabel] = useState(false);
 
   vehicle.milestones.forEach(ms => {
     const objParent = scene.getObjectByName(ms.name.replace(":","_").replace(" ","_"));
@@ -25,19 +27,44 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
   const vehicleTransport = transports.find(transport => transport.vehicle_id == vehicle.id);
   const route = vehicleTransport ? routes[vehicleTransport.route.toUpperCase()] : undefined;
   
+
+
+  const standGLTF = useGLTF(vehicle.stand?`/models/stands/${vehicle.stand}.gltf`:"/models/empty.gltf");
+  const standYOffset = useMemo(() => {
+    if (!vehicle.stand) return 0;
+
+    const marker = standGLTF.scene.getObjectByName("AFT_MARKER");
+    return marker ? Math.abs(marker.position.y) : 0;
+  }, [standGLTF]);
+
+  pos.y += standYOffset;
+
+
+
   useFrame(() => {
     if (!route || !vehicleTransport || !vehicleRef.current) return;
     
     const now = Date.now();
     const progress = THREE.MathUtils.clamp((now - vehicleTransport.start_time) / (vehicleTransport.end_time - vehicleTransport.start_time), 0, 1);
-    const point = route.getPoint(progress);
-    point.y = vehicle.position.y;
+
+    // position
+    const point = route.getPointAt(progress);
+    point.y = vehicle.position.y + standYOffset;
     vehicleRef.current.position.copy(point);
+
+    // rotation
+    const tangent = route.getTangentAt(progress).normalize().multiplyScalar(-1);  // rotate 180deg
+    const lookAtTarget = point.clone().add(tangent);
+    vehicleRef.current.lookAt(lookAtTarget);
   });
 
   return (
-    <group ref={vehicleRef} position={pos} rotation={new THREE.Euler(0,degToRad(vehicle.rotation),0)}>
+    <group ref={vehicleRef} onPointerEnter={() => setHoverLabel(true)} onPointerLeave={() => setHoverLabel(false)} position={pos} rotation={new THREE.Euler(0,degToRad(vehicle.rotation),0)}>
       <primitive object={scene} />
+      {vehicle.stand && <primitive object={standGLTF.scene} />}
+      {hoverLabel && <Html center position={[0,20,0]} className="pointer-events-none">
+        <Section className="py-1 px-2 w-fit text-nowrap bg-bg-primary/80 pointer-events-none uppercase">{vehicle.type} {vehicle.serial_number}</Section>
+      </Html>}
     </group>
   );
 }

@@ -13,16 +13,15 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import * as THREE from "three";
 import { createClient } from "@/utils/supabase/client";
 import moment from "moment-timezone";
-import { VehicleMilestone, VehicleStatus } from "@/lib/types";
-import { UUID } from "crypto";
-import { locationPresets, pois } from "@/lib/tempData";
+import { stands, VehicleMilestone, VehicleStatus } from "@/lib/types";
+import { locationPresets } from "@/lib/tempData";
 import { Dialog, DialogTrigger } from "./UI/dialog";
 import VehicleAnalyticsModal from "./VehicleAnalyticsModal";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "./UI/dropdown-menu";
 
 
 export default function VehicleInspector() {
-  const { activeVehicle: vehicle, transports, routes, poi } = useGlobals();
+  const { activeVehicle: vehicle, transports, routes, poi, POIs } = useGlobals();
   const vehicleTransport = transports.find(transport => transport.vehicle_id == vehicle?.id);
   const [vehicleTransportProgress, setVehicleTransportProgress] = useState(0);
 
@@ -58,7 +57,7 @@ export default function VehicleInspector() {
     await supabase.from("transports").insert({
       route: transportRoute.replace(" → ","-"),
       start_time: Date.now(),
-      end_time: Date.now()+60000+60000+60000+60000+60000,
+      end_time: Date.now()+ (poi.id=="0403e1dc-fe0e-401d-835e-092bbfde8772"?(60000*5)+(60000*15):(60000*4)), // 5 min from MB TO HW4, 15 min from GB to HW4 END
       vehicle_id: vehicle.id,
       poi: poi.id
     });
@@ -68,7 +67,12 @@ export default function VehicleInspector() {
     if (!vehicleTransport || !vehicle) return;
 
     const route = routes[vehicleTransport?.route.toUpperCase()];
-    const point = route.getPoint(vehicleTransportProgress);
+    const point = route.getPointAt(vehicleTransportProgress);
+
+    const tangent = route.getTangentAt(vehicleTransportProgress).normalize().multiplyScalar(vehicle.type=="ship"?-1:1); // rotate 180deg
+    const tangentXZ = new THREE.Vector3(tangent.x, 0, tangent.z).normalize();
+    const yRotationDeg = THREE.MathUtils.radToDeg(Math.atan2(tangentXZ.x, tangentXZ.z));
+
 
     // update vehicle pos
     if (point) await supabase.from("vehicles").update({
@@ -76,7 +80,8 @@ export default function VehicleInspector() {
         x: point.x,
         y: vehicle.position.y,
         z: point.z,
-      }
+      },
+      rotation: Math.round(yRotationDeg)
     }).eq("id", vehicle.id);
 
     // remove transport
@@ -111,12 +116,14 @@ export default function VehicleInspector() {
   }
 
 
-  const setVehiclePosition = async (newPos: { x: number, y: number, z: number }, location: string) => {
+  const setVehiclePosition = async (newPos: { x: number, y: number, z: number, r?: number }, location: string) => {
     if (!vehicle || !newPos || !location) return;
 
     await supabase.from("vehicles").update({
-      position: newPos,
-      location: location
+      position: { x: newPos.x, y: newPos.y, z: newPos.z },
+      location: location,
+      rotation: newPos.r!=undefined ? newPos.r : vehicle.rotation,
+      stand: null
     }).eq("id", vehicle.id);
   }
 
@@ -126,6 +133,15 @@ export default function VehicleInspector() {
 
     await supabase.from("vehicles").update({
       status: newStatus
+    }).eq("id", vehicle.id);
+  }
+
+
+  const setVehicleStand= async (newStand: string) => {
+    if (!vehicle || !newStand) return;
+
+    await supabase.from("vehicles").update({
+      stand: newStand=="none"?null:newStand
     }).eq("id", vehicle.id);
   }
 
@@ -235,6 +251,25 @@ export default function VehicleInspector() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div>
+                <p>Stand</p>
+                <Select value={vehicle.stand==undefined?"none":vehicle.stand} onValueChange={(newStand) => setVehicleStand(newStand)}>
+                  <SelectTrigger className="font-bold font-consolas uppercase text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 w-full mb-2">
+                    <SelectValue></SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Select Stand</SelectLabel>
+                      <SelectItem value="none">None</SelectItem>
+                      {stands[vehicle.vehicle_config].map((stand,i) =>
+                        <SelectItem value={stand} key={i} className="uppercase">{stand}</SelectItem>
+                      )}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {poi && <div>
                 <p>Location</p>
                 <p className="font-consolas font-bold text-label-secondary/75 -mt-1">{vehicle.position.x.toFixed(2)}, {vehicle.position.y.toFixed(2)}, {vehicle.position.z.toFixed(2)}</p>
@@ -315,7 +350,7 @@ export default function VehicleInspector() {
                   <SelectValue></SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {groupPOIsByLocation(pois).map((poiGroup, i) =>
+                  {groupPOIsByLocation(POIs).map((poiGroup, i) =>
                     <SelectGroup key={poiGroup.location} className={i>0?"mt-2":""}>
                       <SelectLabel>{poiGroup.location}</SelectLabel>
                         {poiGroup.sites.map(site =>
