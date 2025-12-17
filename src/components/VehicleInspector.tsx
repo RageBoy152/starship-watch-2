@@ -311,7 +311,7 @@ export default function VehicleInspector() {
             <p className="font-bold">Edit Milestones</p>
             <div className="flex flex-col gap-1 mt-1 font-medium">
               {vehicle.milestones.map(ms =>
-                <VehicleMilestoneEditor key={ms.name} ms={ms} editMilestone={(newChecked, newDate) => editVehicleMilestone(ms.name, newChecked, newDate)} />
+                <VehicleMilestoneEditor key={`${vehicle.id}-${ms.name}`} ms={ms} editMilestone={(newChecked, newDate) => editVehicleMilestone(ms.name, newChecked, newDate)} />
               )}
             </div>
           </div>

@@ -7,10 +7,13 @@ import { degToRad } from "three/src/math/MathUtils.js";
 import { useGlobals } from "../ContextProviders/GlobalsProvider";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
+import { SkeletonUtils } from "three-stdlib";
 
 export default function Booster({ vehicle }: { vehicle: Vehicle }) {
+  const { scene: gltfScene } = useGLTF(`/models/vehicles/${vehicle.vehicle_config}/${vehicle.vehicle_config}.gltf`);
+  const scene = useMemo(() => SkeletonUtils.clone(gltfScene), [gltfScene]);
+
   const { transports, routes } = useGlobals();
-  const { scene } = useGLTF(`/models/vehicles/${vehicle.vehicle_config}/${vehicle.vehicle_config}.gltf`);
   const vehicleRef = useRef<THREE.Group|null>(null);
 
   vehicle.milestones.forEach(ms => {
