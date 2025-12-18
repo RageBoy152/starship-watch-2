@@ -3,9 +3,9 @@
 import Section from "./UI/section";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./UI/tooltip";
 import { Button } from "./UI/Button";
-import { CalendarRangeIcon, ChartNoAxesCombinedIcon, ChevronDownIcon, LocateFixedIcon } from "lucide-react";
+import { CalendarRangeIcon, ChartNoAxesCombinedIcon, ChevronDownIcon, LocateFixedIcon, Move3DIcon, SaveIcon } from "lucide-react";
 import { getVehicleStatusClass, groupPOIsByLocation } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import VehicleStackingDiagram from "./VehicleStackingDiagram";
 import { Checkbox } from "./UI/checkbox";
 import { useGlobals } from "./ContextProviders/GlobalsProvider";
@@ -19,15 +19,26 @@ import { Dialog, DialogTrigger } from "./UI/dialog";
 import VehicleAnalyticsModal from "./VehicleAnalyticsModal";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "./UI/dropdown-menu";
 import { Slider } from "./UI/slider";
+import { twMerge } from "tailwind-merge";
 
 
 export default function VehicleInspector() {
-  const { activeVehicle: vehicle, transports, routes, poi, POIs } = useGlobals();
+  const { activeVehicle: vehicle, transports, routes, poi, POIs, setMoveGizmo, moveGizmo } = useGlobals();
   const vehicleTransport = transports.find(transport => transport.vehicle_id == vehicle?.id);
   const [vehicleTransportProgress, setVehicleTransportProgress] = useState(0);
 
   const [vehicleSite, setVehicleSite] = useState<string|undefined>(vehicle?.poi);
   const [rotation, setRotation] = useState(vehicle?.rotation??0);
+
+  const [newDescription, setNewDescription] = useState(vehicle?.description??"");
+  useEffect(() => { if (vehicle) setNewDescription(vehicle.description??""); }, [vehicle?.description]);
+  useEffect(() => { if (textareaRef.current) autoResize(textareaRef.current); }, [newDescription]);
+
+  const textareaRef = useRef<HTMLTextAreaElement|null>(null);
+  const autoResize = (el: HTMLTextAreaElement) => {
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight+2}px`;
+  }
 
   useEffect(() => {
     setVehicleSite(vehicle?.poi);
@@ -123,18 +134,6 @@ export default function VehicleInspector() {
   }
 
 
-  const setVehiclePosition = async (newPos: { x: number, y: number, z: number, r?: number }, location: string) => {
-    if (!vehicle || !newPos || !location) return;
-
-    await supabase.from("vehicles").update({
-      position: { x: newPos.x, y: newPos.y, z: newPos.z },
-      location: location,
-      rotation: newPos.r!=undefined ? newPos.r : vehicle.rotation,
-      stand: null
-    }).eq("id", vehicle.id);
-  }
-
-
   const setVehicleStatus = async (newStatus: VehicleStatus) => {
     if (!vehicle || !newStatus) return;
 
@@ -154,10 +153,42 @@ export default function VehicleInspector() {
 
 
   const setVehicleRotation = async (newRotation: number) => {
-    if (!vehicle || newRotation==undefined) return;
+    if (!vehicle) return;
 
     await supabase.from("vehicles").update({
       rotation: newRotation
+    }).eq("id", vehicle.id);
+  }
+
+
+  const setLocationPreset = async (location: string, sublocation: string) => {
+    if (!vehicle) return;
+
+    await supabase.from("vehicles").update({
+      location_preset: `${location} | ${sublocation}`
+    }).eq("id", vehicle.id);
+  }
+
+
+  const setLocation = async (location: string) => {
+    if (!vehicle) return;
+
+    let filteredLocation = location.trim()
+    if (filteredLocation == "") return;
+
+    await supabase.from("vehicles").update({
+      location: filteredLocation
+    }).eq("id", vehicle.id);
+  }
+
+
+  const setDescription = async (desc: string) => {
+    if (!vehicle) return;
+
+    let filteredDesc = desc.trim()
+
+    await supabase.from("vehicles").update({
+      description: filteredDesc==""?null:filteredDesc
     }).eq("id", vehicle.id);
   }
 
@@ -174,7 +205,7 @@ export default function VehicleInspector() {
           <div className="flex items-center justify-between">
             <div className="uppercase font-bold">
               <h2 className="text-2xl">{vehicle.type} {vehicle.serial_number}</h2>
-              <h3 className="font-consolas text-label-secondary">{vehicle.location}</h3>
+              <h3 className="font-consolas text-label-secondary">{vehicle.location_preset??vehicle.location}</h3>
             </div>
 
             <div className="flex gap-1">
@@ -221,6 +252,8 @@ export default function VehicleInspector() {
           </div>
 
           <p className={`font-consolas font-bold uppercase -my-2 ${vehicle&&getVehicleStatusClass(vehicle?.status)}`}>{vehicle?.status}</p>
+
+          {vehicle.description && <p className="text-label-secondary whitespace-pre-wrap">{vehicle.description}</p>}
 
           <hr className="text-label-secondary/25" />
 
@@ -288,35 +321,51 @@ export default function VehicleInspector() {
               </div>
 
               {poi && <div>
-                <p>Location</p>
-                <p className="font-consolas font-bold text-label-secondary/75 -mt-1">{vehicle.position.x.toFixed(2)}, {vehicle.position.y.toFixed(2)}, {vehicle.position.z.toFixed(2)}</p>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="cursor-pointer flex justify-between items-center bg-bg-secondary/50 backdrop-blur-lg border border-label-primary/30 py-1 px-2 w-full uppercase font-consolas font-bold text-label-secondary/75">
-                      <p>Move To</p>
-                      <ChevronDownIcon className="w-4 h-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-80">
-                    <DropdownMenuLabel>Location</DropdownMenuLabel>
-                    <DropdownMenuGroup>
-                      {Object.entries(locationPresets[poi.id]).map(([location, sublocations]) =>
-                        <DropdownMenuSub key={location}>
-                          <DropdownMenuSubTrigger>{location[0].toUpperCase()}{location.slice(1,)}</DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent className="w-60">
-                              <DropdownMenuLabel>{location}</DropdownMenuLabel>
-                              {Object.entries(sublocations).map(([sublocation, value]) =>
-                                <DropdownMenuItem key={sublocation} onClick={() => setVehiclePosition(value, location)}>{sublocation[0].toUpperCase()}{sublocation.slice(1,)}</DropdownMenuItem>
-                              )}
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                      )}
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-between items-center">
+                  <p>Location</p>
+                  <p className="font-consolas font-bold text-label-secondary/75 -mt-1">{vehicle.position.x.toFixed(2)}, {vehicle.position.y.toFixed(2)}, {vehicle.position.z.toFixed(2)}</p>
+                </div>
+                <div className="flex gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="cursor-pointer text-sm flex justify-between items-center text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 px-3 py-1 w-full uppercase font-consolas font-bold">
+                        <p>{vehicle.location_preset??"Location Preset"}</p>
+                        <ChevronDownIcon className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-80">
+                      <DropdownMenuLabel>Location Preset</DropdownMenuLabel>
+                      <DropdownMenuGroup>
+                        {Object.entries(locationPresets[poi.id]).map(([location, sublocations]) =>
+                          <DropdownMenuSub key={location}>
+                            <DropdownMenuSubTrigger>{location[0].toUpperCase()}{location.slice(1,)}</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuSubContent className="w-60">
+                                <DropdownMenuLabel>{location}</DropdownMenuLabel>
+                                {Object.entries(sublocations).map(([sublocation,]) =>
+                                  <DropdownMenuItem key={sublocation} onClick={() => setLocationPreset(location, sublocation)}>{sublocation[0].toUpperCase()}{sublocation.slice(1,)}</DropdownMenuItem>
+                                )}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                        )}
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button className={`w-fit p-2 ${moveGizmo==vehicle.id?"bg-accent/50 hover:bg-accent":""}`} onClick={() => setMoveGizmo(prev => prev==vehicle.id?null:vehicle.id)}>
+                        <Move3DIcon className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Manual Move</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>}
+
 
               <div>
                 <div className="flex items-center justify-between">
@@ -324,6 +373,30 @@ export default function VehicleInspector() {
                   <p className="font-consolas font-bold text-sm">{rotation.toFixed()}</p>
                 </div>
                 <Slider min={0} max={360} step={5} snapPoints={[0,45,90,180,225,270,315,360]} snapThreshold={15} value={[rotation]} onValueChange={(newVal) => setRotation(newVal[0])} onValueCommit={(value) => setVehicleRotation(value[0])} />
+              </div>
+
+
+              <div>
+                <p>Location</p>
+                <TextInput placeholder="Location" value={vehicle.location} onCommit={(newVal) => { setLocation(newVal); }}  />
+              </div>
+
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <p>Description</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button className="w-fit p-1" onClick={() => setDescription(newDescription)}>
+                        <SaveIcon className="w-3 h-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Save Changes</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <textarea ref={textareaRef} value={newDescription} onChange={(e) => setNewDescription(e.currentTarget.value)} placeholder="Description..." className="w-full py-1 px-3 bg-bg-secondary/50 border border-label-secondary/25 outline-none resize-none"></textarea>
               </div>
             </div>
           </div>
@@ -399,13 +472,22 @@ export default function VehicleInspector() {
 
 
 const VehicleMilestoneEditor = ({ ms, editMilestone }: { ms: VehicleMilestone, editMilestone: (newChecked: boolean, newDate?: string) => void }) => {
-  const [msDate, setMsDate] = useState<string>(ms.complete_date??"");
-
   return (
     <div className="flex gap-2 items-center">
       <Checkbox checked={ms.complete} onCheckedChange={(checked) => editMilestone(checked as boolean, ms.complete_date)} />
       <p>{ms.name}</p>
-      {ms.complete && <input placeholder="YYYY-MM-DD" type="text" value={msDate} onChange={(e)=>{ setMsDate(e.currentTarget.value) }} onKeyDown={(e)=>{ if (e.key == "Enter") editMilestone(ms.complete, e.currentTarget.value); }} className="ms-auto w-1/2 bg-bg-secondary/50 border border-label-secondary/25 px-1 outline-none" />}
+      {ms.complete && <TextInput placeholder="YYYY-MM-DD" value={ms.complete_date??""} onCommit={(newVal) => { editMilestone(ms.complete, newVal); }} className="ms-auto w-1/2 px-1 py-0" />}
     </div>
+  );
+}
+
+
+
+const TextInput = ({ placeholder, value, onCommit, className="" }: { placeholder: string, value: string, onCommit: (newVal: string) => void, className?: string }) => {
+  const [val, setVal] = useState(value);
+  useEffect(() => { setVal(value); }, [value]);
+
+  return (
+    <input placeholder={placeholder} type="text" value={val} onChange={(e)=>{ setVal(e.currentTarget.value) }} onKeyDown={(e)=>{ if (e.key == "Enter") onCommit(e.currentTarget.value); }} className={twMerge("w-full py-1 px-3 bg-bg-secondary/50 border border-label-secondary/25 outline-none", className)} />
   );
 }

@@ -13,7 +13,7 @@ import Booster from "./models/Booster";
 
 
 export default function ThreeScene() {
-  const { setActiveVehicle, poiVehicles, poi } = useGlobals();
+  const { setActiveVehicle, poiVehicles, poi, camControlsEnabled } = useGlobals();
   const clickPos = useRef<{ x: number; y: number } | null>(null);
 
 
@@ -57,7 +57,7 @@ export default function ThreeScene() {
         }}
       >
         <OrbitControls
-          enablePan={true} enableZoom={true} enableRotate={true}
+          enablePan={camControlsEnabled} enableZoom={camControlsEnabled} enableRotate={camControlsEnabled}
           enableDamping={true} dampingFactor={0.1}
           mouseButtons={{ LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }}
           target={[0,0,0]}

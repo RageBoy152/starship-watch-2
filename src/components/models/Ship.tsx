@@ -10,6 +10,8 @@ import { SkeletonUtils } from "three-stdlib";
 import { useTransportRoute } from "./VehicleModules/useTransportRoute";
 import { useStandAttachment } from "./VehicleModules/useStandAttachment";
 import { useChopstickAttachment } from "./VehicleModules/useChopstickAttachment";
+import ReusableTransformControls from "./VehicleModules/ReusableTransformControls";
+import { locationPresets } from "@/lib/tempData";
 
 
 export default function Ship({ vehicle }: { vehicle: Vehicle }) {
@@ -41,17 +43,29 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
 
   useEffect(() => { vehicleRef.current?.position.set(pos.x, pos.y, pos.z) }, [vehicle.stand, vehicle.position]);
   useEffect(() => { if (vehicleRef.current) vehicleRef.current.rotation.y = degToRad(vehicle.rotation); }, [vehicle.rotation]);
+  useEffect(() => {
+    if (!vehicleRef.current || !vehicle.location_preset) return;
+
+    const locationPresetValue = locationPresets[vehicle.poi][vehicle.location_preset.split(" | ")[0]][vehicle.location_preset.split(" | ")[1]];
+    vehicleRef.current.position.set(locationPresetValue.x, locationPresetValue.y, locationPresetValue.z);
+    if (locationPresetValue.r!=null) vehicleRef.current.rotation.y = degToRad(locationPresetValue.r);
+    
+  }, [vehicle]);
 
 
   return (
-    <group ref={vehicleRef} onPointerEnter={() => setHoverLabel(true)} onPointerLeave={() => setHoverLabel(false)}>
-      <primitive object={scene} />
+    <>
+      <group ref={vehicleRef} onPointerEnter={() => setHoverLabel(true)} onPointerLeave={() => setHoverLabel(false)}>
+        <primitive object={scene} />
 
-      {standScene && <primitive object={standScene} />}
+        {standScene && <primitive object={standScene} />}
 
-      {hoverLabel && <Html center position={[0,20,0]} className="pointer-events-none">
-        <Section className="py-1 px-2 w-fit text-nowrap bg-bg-primary/80 pointer-events-none uppercase">{vehicle.type} {vehicle.serial_number}</Section>
-      </Html>}
-    </group>
+        {hoverLabel && <Html center position={[0,20,0]} className="pointer-events-none">
+          <Section className="py-1 px-2 w-fit text-nowrap bg-bg-primary/80 pointer-events-none uppercase">{vehicle.type} {vehicle.serial_number}</Section>
+        </Html>}
+      </group>
+
+      <ReusableTransformControls ref={vehicleRef} vehicle={vehicle} />
+    </>
   );
 }

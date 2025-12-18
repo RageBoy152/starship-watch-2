@@ -34,6 +34,8 @@ export type Vehicle = {
     y: number
     z: number
   }
+  location_preset?: string
+  description?: string
   rotation: number
   type: "booster" | "ship"
   serial_number: string

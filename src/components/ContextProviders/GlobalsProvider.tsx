@@ -17,6 +17,10 @@ type GlobalsContextType = {
   POIs: POI[]
   chopstickVehicleMarkers: Record<string,THREE.Object3D|null>
   setChopstickVehicleMarkers: Dispatch<SetStateAction<Record<string,THREE.Object3D|null>>>
+  moveGizmo: UUID|null
+  setMoveGizmo: Dispatch<SetStateAction<UUID|null>>
+  camControlsEnabled: boolean
+  setCamControlsEnabled: Dispatch<SetStateAction<boolean>>
   poi?: POI
 }
 
@@ -39,8 +43,13 @@ export const GlobalsProvider = ({ children, poi: _poi }: { children: React.React
   const [POIs, setPOIs] = useState<POI[]>([]);
   const [poi, setPOI] = useState<POI|undefined>(_poi);
   const [chopstickVehicleMarkers, setChopstickVehicleMarkers] = useState<Record<string,THREE.Object3D|null>>({});
+  const [moveGizmo, setMoveGizmo] = useState<UUID|null>(null);
+  const [camControlsEnabled, setCamControlsEnabled] = useState<boolean>(true);
 
-  useEffect(() => { activeVehicleRef.current = activeVehicle; }, [activeVehicle]);
+  useEffect(() => {
+    activeVehicleRef.current = activeVehicle;
+  if (activeVehicle == null && moveGizmo != null) setMoveGizmo(null);
+  }, [activeVehicle]);
 
   useEffect(() => {
     let ignore = false;
@@ -183,7 +192,7 @@ export const GlobalsProvider = ({ children, poi: _poi }: { children: React.React
   }, [_poi]);
 
   return (
-    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi, POIs, chopstickVehicleMarkers, setChopstickVehicleMarkers }}>
+    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi, POIs, chopstickVehicleMarkers, setChopstickVehicleMarkers, moveGizmo, setMoveGizmo, camControlsEnabled, setCamControlsEnabled }}>
       {children}
     </GlobalsContext.Provider>
   );
