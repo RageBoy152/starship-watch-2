@@ -40,15 +40,13 @@ export function useChopstickAttachment({ vehicle, ref, chopstickYOffset, chopsti
 
     // find what chopstick we're attatched to
     const entry = Object.entries(poi.config).find(([key, value]) => key.match(/^pad\d+_chopstick_vehicle$/i) && value == vehicle.id);
-    const padKey = entry?.[0].split("_")[0].toUpperCase();
+    const padKey = entry?.[0].split("_")[0].toUpperCase(); // PAD2, PAD1 etc
     const marker = padKey ? chopstickVehicleMarkers[padKey] : null;
 
-    // prefix should be prop
     if (marker) {
       wasAttached.current = true;
       marker.attach(ref.current);
-
-      // these offsets should be props
+      
       ref.current.position.set(0,chopstickYOffset,0);
       ref.current.rotation.set(0,degToRad(chopstickRotationOffset),0);
     } else if (wasAttached.current) {
@@ -64,4 +62,7 @@ export function useChopstickAttachment({ vehicle, ref, chopstickYOffset, chopsti
       saveTransform(pos, parseInt(radToDeg(new THREE.Euler().setFromQuaternion(quat).y).toFixed()));
     }
   }, [chopstickVehicleMarkers, poi, vehicle.id]);
+
+
+  return wasAttached;
 }

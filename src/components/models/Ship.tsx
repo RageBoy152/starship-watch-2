@@ -24,7 +24,7 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
   // add modules
   const { standScene, yOffset } = useStandAttachment(vehicle.stand);
   useTransportRoute({ vehicle, ref: vehicleRef, yOffset: yOffset, flipRotation: true });
-  useChopstickAttachment({ vehicle, ref: vehicleRef, chopstickYOffset: -38, chopstickRotationOffset: 180-4 });
+  const wasAttached = useChopstickAttachment({ vehicle, ref: vehicleRef, chopstickYOffset: -38, chopstickRotationOffset: 180-4 });
 
 
   // milestone model visibility
@@ -41,16 +41,15 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
   let pos = new THREE.Vector3(vehicle.position.x,vehicle.position.y,vehicle.position.z);
   pos.y += yOffset;
 
-  useEffect(() => { vehicleRef.current?.position.set(pos.x, pos.y, pos.z) }, [vehicle.stand, vehicle.position]);
+  useEffect(() => { if (!wasAttached.current) vehicleRef.current?.position.set(pos.x, pos.y, pos.z) }, [vehicle.stand, vehicle.position]);
   useEffect(() => { if (vehicleRef.current) vehicleRef.current.rotation.y = degToRad(vehicle.rotation); }, [vehicle.rotation]);
   useEffect(() => {
     if (!vehicleRef.current || !vehicle.location_preset) return;
 
     const locationPresetValue = locationPresets[vehicle.poi][vehicle.location_preset.split(" | ")[0]][vehicle.location_preset.split(" | ")[1]];
-    vehicleRef.current.position.set(locationPresetValue.x, locationPresetValue.y, locationPresetValue.z);
+    vehicleRef.current.position.set(locationPresetValue.x, locationPresetValue.y+yOffset, locationPresetValue.z);
     if (locationPresetValue.r!=null) vehicleRef.current.rotation.y = degToRad(locationPresetValue.r);
-    
-  }, [vehicle]);
+  }, [vehicle, yOffset]);
 
 
   return (

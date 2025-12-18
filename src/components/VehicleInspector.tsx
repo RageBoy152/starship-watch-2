@@ -32,6 +32,8 @@ export default function VehicleInspector() {
   const [vehicleSite, setVehicleSite] = useState<string|undefined>(vehicle?.poi);
   const [rotation, setRotation] = useState(vehicle?.rotation??0);
 
+  const parentChopsticks = (!poi||!vehicle)?undefined :Object.entries(poi.config).find(([key, value]) => key.match(/^pad\d+_chopstick_vehicle$/i) && value == vehicle.id);
+
   const [newDescription, setNewDescription] = useState(vehicle?.description??"");
   useEffect(() => { if (vehicle) setNewDescription(vehicle.description??""); }, [vehicle?.description]);
   useEffect(() => { if (textareaRef.current) autoResize(textareaRef.current); }, [newDescription]);
@@ -105,6 +107,10 @@ export default function VehicleInspector() {
       vehicle_id: vehicle.id,
       poi: poi.id
     });
+
+    await supabase.from("vehicles").update({
+      location_preset: null
+    }).eq("id", vehicle.id);
   }
 
   const stopTransport = async () => {
@@ -182,7 +188,8 @@ export default function VehicleInspector() {
     if (!vehicle) return;
 
     await supabase.from("vehicles").update({
-      rotation: newRotation
+      rotation: newRotation,
+      location_preset: null
     }).eq("id", vehicle.id);
   }
 
@@ -192,6 +199,7 @@ export default function VehicleInspector() {
 
     await supabase.from("vehicles").update({
       location_preset: `${location} | ${sublocation}`,
+      location: `${location} | ${sublocation}`,
       position: {
         x: locationPresetValue.x,
         y: locationPresetValue.y,
@@ -339,7 +347,7 @@ export default function VehicleInspector() {
 
                 <div>
                   <p>Stand</p>
-                  <Select value={vehicle.stand==undefined?"none":vehicle.stand} onValueChange={(newStand) => setVehicleStand(newStand)}>
+                  <Select disabled={parentChopsticks!=undefined} value={vehicle.stand==undefined?"none":vehicle.stand} onValueChange={(newStand) => setVehicleStand(newStand)}>
                     <SelectTrigger className="font-bold font-consolas uppercase text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 w-full mb-2">
                       <SelectValue></SelectValue>
                     </SelectTrigger>
@@ -362,8 +370,8 @@ export default function VehicleInspector() {
                   </div>
                   <div className="flex gap-1">
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="cursor-pointer text-sm flex justify-between items-center text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 px-3 py-1 w-full uppercase font-consolas font-bold">
+                      <DropdownMenuTrigger disabled={vehicleTransport!=undefined||parentChopsticks!=undefined} asChild>
+                        <button className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 text-sm flex justify-between items-center text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 px-3 py-1 w-full uppercase font-consolas font-bold">
                           <p>{vehicle.location_preset??"Location Preset"}</p>
                           <ChevronDownIcon className="w-4 h-4" />
                         </button>
@@ -390,7 +398,7 @@ export default function VehicleInspector() {
 
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button className={`w-fit p-2 ${moveGizmo==vehicle.id?"bg-accent/50 hover:bg-accent":""}`} onClick={() => setMoveGizmo(prev => prev==vehicle.id?null:vehicle.id)}>
+                        <Button disabled={vehicleTransport!=undefined||parentChopsticks!=undefined} className={`w-fit p-2 ${moveGizmo==vehicle.id?"bg-accent/50 hover:bg-accent":""}`} onClick={() => setMoveGizmo(prev => prev==vehicle.id?null:vehicle.id)}>
                           <Move3DIcon className="w-4 h-4" />
                         </Button>
                       </TooltipTrigger>
@@ -407,7 +415,7 @@ export default function VehicleInspector() {
                     <p>Rotation</p>
                     <p className="font-consolas font-bold text-sm">{rotation.toFixed()}</p>
                   </div>
-                  <Slider min={0} max={360} step={5} snapPoints={[0,45,90,180,225,270,315,360]} snapThreshold={15} value={[rotation]} onValueChange={(newVal) => setRotation(newVal[0])} onValueCommit={(value) => setVehicleRotation(value[0])} />
+                  <Slider disabled={vehicleTransport!=undefined||parentChopsticks!=undefined} min={0} max={360} step={5} snapPoints={[0,45,90,180,225,270,315,360]} snapThreshold={15} value={[rotation]} onValueChange={(newVal) => setRotation(newVal[0])} onValueCommit={(value) => setVehicleRotation(value[0])} />
                 </div>
 
 
@@ -475,7 +483,7 @@ export default function VehicleInspector() {
                   </SelectContent>
                 </Select>
 
-                {!vehicleTransport && <Button className="py-1 font-consolas uppercase hover:bg-success/50" disabled={!transportRoute} onClick={() => addTransport()}>Start</Button>}
+                {!vehicleTransport && <Button className="py-1 font-consolas uppercase not-disabled:hover:bg-success/50" disabled={!transportRoute||parentChopsticks!=undefined} onClick={() => addTransport()}>Start</Button>}
                 {vehicleTransport && <div className="px-2 py-1 flex justify-between items-center font-consolas font-bold bg-bg-secondary/50 backdrop-blur-lg border border-label-primary/30 relative">
                   <p>{vehicleTransportProgress==0?"Prepping Transport...":(vehicleTransportProgress==1?"Transport Complete":"Driving...")}</p>
                   <p className="lowercase">{(vehicleTransportProgress * 100).toFixed(1)}%</p>
@@ -502,7 +510,7 @@ export default function VehicleInspector() {
                   </SelectContent>
                 </Select>
 
-                <Button className="py-1 font-consolas uppercase hover:bg-success/50" disabled={!vehicleSite} onClick={() => changeVehicleSite()}>Teleport</Button>
+                <Button className="py-1 font-consolas uppercase not-disabled:hover:bg-success/50" disabled={!vehicleSite||vehicleTransport!=undefined||parentChopsticks!=undefined} onClick={() => changeVehicleSite()}>Teleport</Button>
               </div>
             </CollapsibleContent>
           </Collapsible>

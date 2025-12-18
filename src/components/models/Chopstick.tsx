@@ -48,7 +48,6 @@ export default function Chopstick({ root, prefix, config, chopstickHeights, zero
     const value = chopstickHeights[preset];
     if (value == null || rotation == null || open == null) return;
 
-    // NOTE: should be added to props
     const MIN = -(maxAngle-zeroRotationOffset);
     const MAX = maxAngle-zeroRotationOffset;
 

@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGlobals } from "../ContextProviders/GlobalsProvider";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../UI/select";
 import { Slider } from "../UI/slider";
 import { XIcon } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import { UUID } from "crypto";
 
 
 type ChopstickSettingsProps = {
@@ -14,15 +16,30 @@ type ChopstickSettingsProps = {
 }
 
 export default function ChopstickSettings({ prefix, updatePOIConfig, maxAngle }: ChopstickSettingsProps) {
-  const { poiVehicles, poi } = useGlobals();
+  const { poiVehicles, poi, transports } = useGlobals();
   const [stickRotation, setstickRotation] = useState(0);
   const [stickOpen, setStickOpen] = useState(0);
+  const supabase = createClient();
 
 
   useEffect(() => {
     setstickRotation(poi?.config[`${prefix.toLowerCase()}_chopstick_rotation`]??0);
     setStickOpen(poi?.config[`${prefix.toLowerCase()}_chopstick_open`]??0);
   }, [poi]);
+
+
+  const attachVehicleObject = async (vehicleId: UUID) => {
+    await supabase.from("vehicles").update({
+      location_preset: null,
+      location: `Pad ${prefix[prefix.length-1]} | Chopsticks`,
+      stand: null
+    }).eq("id", vehicleId);
+  }
+
+
+  const safePOIVehicles = useMemo(() => {
+    return poiVehicles.filter(v => transports.find(transport => transport.vehicle_id == v.id)==undefined)
+  }, [poiVehicles, transports]);
 
 
   if (!poi) return;
@@ -66,20 +83,20 @@ export default function ChopstickSettings({ prefix, updatePOIConfig, maxAngle }:
           <p>Attatched Vehicle</p>
           <XIcon className="w-4 h-4 cursor-pointer" onClick={() => updatePOIConfig(`${prefix.toLowerCase()}_chopstick_vehicle`, "")} />
         </div>
-        <Select value={poi.config[`${prefix.toLowerCase()}_chopstick_vehicle`]} onValueChange={(newVal) => updatePOIConfig(`${prefix.toLowerCase()}_chopstick_vehicle`, newVal)}>
+        <Select value={poi.config[`${prefix.toLowerCase()}_chopstick_vehicle`]} onValueChange={(newVal) => { attachVehicleObject(newVal as UUID); updatePOIConfig(`${prefix.toLowerCase()}_chopstick_vehicle`, newVal); }}>
           <SelectTrigger className="font-bold font-consolas uppercase text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 w-full mb-2">
             <SelectValue></SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Boosters</SelectLabel>
-              {poiVehicles.filter(v => v.type=="booster").map(v =>
+              {safePOIVehicles.filter(v => v.type=="booster").map(v =>
                 <SelectItem className="uppercase" key={v.id} value={v.id}>{v.type} {v.serial_number}</SelectItem>
               )}
             </SelectGroup>
             <SelectGroup>
               <SelectLabel>Ships</SelectLabel>
-              {poiVehicles.filter(v => v.type=="ship").map(v =>
+              {safePOIVehicles.filter(v => v.type=="ship").map(v =>
                 <SelectItem className="uppercase" key={v.id} value={v.id}>{v.type} {v.serial_number}</SelectItem>
               )}
             </SelectGroup>
