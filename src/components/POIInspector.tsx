@@ -30,13 +30,13 @@ export default function POIInspector() {
   if (activeVehicle || !poi) return;
   return (
     <Section className="transition-opacity w-sm max-h-[calc(100dvh-2rem)] scrollbar overflow-y-auto">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 uppercase">
         <div className="flex items-center justify-between">
-          <div className="uppercase font-bold">
+          <div className="font-bold">
             <h2 className="text-2xl">{poi.name}</h2>
             <h3 className="font-consolas text-label-secondary">{poi.location.split(",").splice(0,2).join(",")}</h3>
           </div>
-          <div className="font-consolas font-bold uppercase text-success/75">Online</div>
+          <div className="font-consolas font-bold text-success/75">Online</div>
         </div>
 
         <hr className="text-label-secondary/25" />

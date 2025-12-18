@@ -4,6 +4,7 @@ import { useGlobals } from "../ContextProviders/GlobalsProvider";
 import { useEffect, useState } from "react";
 import ChopstickSettings from "./ChopstickSettings";
 import { POIInspectorProps } from "../POIInspector";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../UI/collapsible";
 
 
 export default function SBLaunchSiteInspector({ updatePOIConfig }: POIInspectorProps) {
@@ -18,21 +19,29 @@ export default function SBLaunchSiteInspector({ updatePOIConfig }: POIInspectorP
   if (!mounted || !poi) return;
   return (
     <>
-      <div className="uppercase">
-        <p className="font-bold">Pad 2</p>
-        <div className="flex flex-col gap-1 mt-1 font-medium">
-          <ChopstickSettings prefix="PAD2" updatePOIConfig={updatePOIConfig} maxAngle={75.3} />
-        </div>
-      </div>
+      <Collapsible>
+        <CollapsibleTrigger asChild>
+          <p className="font-bold">Pad 2</p>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="flex flex-col gap-1 mt-1 font-medium">
+            <ChopstickSettings prefix="PAD2" updatePOIConfig={updatePOIConfig} maxAngle={75.3} />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <hr className="text-label-secondary/25" />
 
-      <div className="uppercase">
-        <p className="font-bold">Pad 1</p>
-        <div className="flex flex-col gap-1 mt-1 font-medium">
-          <ChopstickSettings prefix="PAD1" updatePOIConfig={updatePOIConfig} maxAngle={52.4} />
-        </div>
-      </div>
+      <Collapsible>
+        <CollapsibleTrigger asChild>
+          <p className="font-bold">Pad 1</p>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="flex flex-col gap-1 mt-1 font-medium">
+            <ChopstickSettings prefix="PAD1" updatePOIConfig={updatePOIConfig} maxAngle={52.4} />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </>
   );
 }

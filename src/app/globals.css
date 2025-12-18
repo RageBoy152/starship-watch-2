@@ -42,3 +42,23 @@
   40%, 80% { transform: translateX(8px); }
 }
 .shake { animation: shake 0.5s ease-in-out; transition: transform 0.3s ease; }
+
+
+
+@keyframes collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+
+@keyframes collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}

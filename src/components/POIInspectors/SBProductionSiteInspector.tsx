@@ -4,6 +4,7 @@ import { useGlobals } from "../ContextProviders/GlobalsProvider";
 import { useEffect, useState } from "react";
 import { POIInspectorProps } from "../POIInspector";
 import { Slider } from "../UI/slider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../UI/collapsible";
 
 export default function SBProductionSiteInspector({ updatePOIConfig }: POIInspectorProps) {
   const { poi } = useGlobals();
@@ -17,13 +18,17 @@ export default function SBProductionSiteInspector({ updatePOIConfig }: POIInspec
   if (!mounted || !poi) return;
   return (
     <>
-      <div className="uppercase">
-        <p className="font-bold">Megabay Doors</p>
-        <div className="flex flex-col gap-1 mt-1 font-medium">
-          <DoorSetting defaultValue={poi.config["mb1_door_open"]??0} configKey="mb1_door_open" label="Megabay 1" updatePOIConfig={updatePOIConfig} />
-          <DoorSetting defaultValue={poi.config["mb2_door_open"]??0} configKey="mb2_door_open" label="Megabay 2" updatePOIConfig={updatePOIConfig} />
-        </div>
-      </div>
+      <Collapsible>
+        <CollapsibleTrigger asChild>
+          <p className="font-bold">Megabay Doors</p>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="flex flex-col gap-1 mt-1 font-medium">
+            <DoorSetting defaultValue={poi.config["mb1_door_open"]??0} configKey="mb1_door_open" label="Megabay 1" updatePOIConfig={updatePOIConfig} />
+            <DoorSetting defaultValue={poi.config["mb2_door_open"]??0} configKey="mb2_door_open" label="Megabay 2" updatePOIConfig={updatePOIConfig} />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </>
   );
 }
