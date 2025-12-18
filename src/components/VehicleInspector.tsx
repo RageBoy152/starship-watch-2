@@ -18,6 +18,7 @@ import { locationPresets } from "@/lib/tempData";
 import { Dialog, DialogTrigger } from "./UI/dialog";
 import VehicleAnalyticsModal from "./VehicleAnalyticsModal";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "./UI/dropdown-menu";
+import { Slider } from "./UI/slider";
 
 
 export default function VehicleInspector() {
@@ -26,7 +27,13 @@ export default function VehicleInspector() {
   const [vehicleTransportProgress, setVehicleTransportProgress] = useState(0);
 
   const [vehicleSite, setVehicleSite] = useState<string|undefined>(vehicle?.poi);
-  useEffect(() => { setVehicleSite(vehicle?.poi) }, [vehicle]);
+  const [rotation, setRotation] = useState(vehicle?.rotation??0);
+
+  useEffect(() => {
+    setVehicleSite(vehicle?.poi);
+    setRotation(vehicle?.rotation??0);
+  }, [vehicle]);
+
 
   const supabase = createClient();
   
@@ -119,8 +126,6 @@ export default function VehicleInspector() {
   const setVehiclePosition = async (newPos: { x: number, y: number, z: number, r?: number }, location: string) => {
     if (!vehicle || !newPos || !location) return;
 
-    console.log(`New Rotation: ${newPos.r!=undefined ? newPos.r : vehicle.rotation}`);
-
     await supabase.from("vehicles").update({
       position: { x: newPos.x, y: newPos.y, z: newPos.z },
       location: location,
@@ -146,6 +151,16 @@ export default function VehicleInspector() {
       stand: newStand=="none"?null:newStand
     }).eq("id", vehicle.id);
   }
+
+
+  const setVehicleRotation = async (newRotation: number) => {
+    if (!vehicle || newRotation==undefined) return;
+
+    await supabase.from("vehicles").update({
+      rotation: newRotation
+    }).eq("id", vehicle.id);
+  }
+
 
   if (!vehicle) return;
 
@@ -302,6 +317,14 @@ export default function VehicleInspector() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>}
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <p>Rotation</p>
+                  <p className="font-consolas font-bold text-sm">{rotation.toFixed()}</p>
+                </div>
+                <Slider min={0} max={360} step={5} snapPoints={[0,45,90,180,225,270,315,360]} snapThreshold={15} value={[rotation]} onValueChange={(newVal) => setRotation(newVal[0])} onValueCommit={(value) => setVehicleRotation(value[0])} />
+              </div>
             </div>
           </div>
 
