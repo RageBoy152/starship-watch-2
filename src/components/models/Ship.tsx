@@ -12,6 +12,18 @@ import { useStandAttachment } from "./VehicleModules/useStandAttachment";
 import { useChopstickAttachment } from "./VehicleModules/useChopstickAttachment";
 import ReusableTransformControls from "./VehicleModules/ReusableTransformControls";
 import { locationPresets } from "@/lib/tempData";
+import { useMilestoneVisibility } from "./VehicleModules/useMilestoneVisibility";
+
+
+const BARREL_ORDER = [
+  "ax:4",
+  "a3:4",
+  "a2:3",
+  "cx:3",
+  "fx:4",
+  "pl:3",
+  "nc",
+];
 
 
 export default function Ship({ vehicle }: { vehicle: Vehicle }) {
@@ -25,16 +37,7 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
   const { standScene, yOffset } = useStandAttachment(vehicle.stand);
   useTransportRoute({ vehicle, ref: vehicleRef, yOffset: yOffset, flipRotation: true });
   const wasAttached = useChopstickAttachment({ vehicle, ref: vehicleRef, chopstickYOffset: -38, chopstickRotationOffset: 180-4 });
-
-
-  // milestone model visibility
-  vehicle.milestones.forEach(ms => {
-    const objParent = scene.getObjectByName(ms.name.replace(":","_").replace(" ","_"));
-    objParent?.traverse(_child => {
-      const child = _child as THREE.Mesh;
-      child.visible = ms.complete;
-    });
-  });
+  useMilestoneVisibility({ root: scene, vehicle, barrelOrder: BARREL_ORDER });
 
 
   // set transforms
@@ -46,7 +49,11 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
   useEffect(() => {
     if (!vehicleRef.current || !vehicle.location_preset) return;
 
-    const locationPresetValue = locationPresets[vehicle.poi][vehicle.location_preset.split(" | ")[0]][vehicle.location_preset.split(" | ")[1]];
+    const a = locationPresets[vehicle.poi];
+    const b = !a?undefined:a[vehicle.location_preset.split(" | ")[0]]
+    const locationPresetValue = !b?undefined:b[vehicle.location_preset.split(" | ")[1]]
+    if (!locationPresetValue) return;
+
     vehicleRef.current.position.set(locationPresetValue.x, locationPresetValue.y+yOffset, locationPresetValue.z);
     if (locationPresetValue.r!=null) vehicleRef.current.rotation.y = degToRad(locationPresetValue.r);
   }, [vehicle, yOffset]);

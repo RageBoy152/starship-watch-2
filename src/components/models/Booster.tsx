@@ -10,9 +10,25 @@ import { useTransportRoute } from "./VehicleModules/useTransportRoute";
 import { useStandAttachment } from "./VehicleModules/useStandAttachment";
 import { useChopstickAttachment } from "./VehicleModules/useChopstickAttachment";
 import Section from "../UI/section";
-import { useGlobals } from "../ContextProviders/GlobalsProvider";
 import ReusableTransformControls from "./VehicleModules/ReusableTransformControls";
 import { locationPresets } from "@/lib/tempData";
+import { useBoosterCH4Stack } from "./VehicleModules/useBoosterCH4Stack";
+import { useMilestoneVisibility } from "./VehicleModules/useMilestoneVisibility";
+
+
+const BARREL_ORDER = [
+  "ax:2",
+  "a6:4",
+  "a5:4",
+  "a4:4",
+  "a3:4",
+  "a2:4",
+  "cx:3",
+  "f3:4",
+  "f2:4",
+  "fx:3",
+];
+
 
 export default function Booster({ vehicle }: { vehicle: Vehicle }) {
   const { scene: gltfScene } = useGLTF(`/models/vehicles/${vehicle.vehicle_config}/${vehicle.vehicle_config}.gltf`);
@@ -25,16 +41,8 @@ export default function Booster({ vehicle }: { vehicle: Vehicle }) {
   const { standScene, yOffset } = useStandAttachment(vehicle.stand);
   useTransportRoute({ vehicle, ref: vehicleRef, yOffset: yOffset });
   const wasAttached = useChopstickAttachment({ vehicle, ref: vehicleRef, chopstickYOffset: -63.5, chopstickRotationOffset: -4 });
-
-
-  // milestone model visibility
-  vehicle.milestones.forEach(ms => {
-    const objParent = scene.getObjectByName(ms.name.replace(":","_").replace(" ","_"));
-    objParent?.traverse(_child => {
-      const child = _child as THREE.Mesh;
-      child.visible = ms.complete;
-    });
-  });
+  useMilestoneVisibility({ root: scene, vehicle, barrelOrder: BARREL_ORDER });
+  useBoosterCH4Stack({ root: scene, vehicle, barrelOrder: BARREL_ORDER });
 
 
   // set transforms
@@ -49,7 +57,6 @@ export default function Booster({ vehicle }: { vehicle: Vehicle }) {
     const locationPresetValue = locationPresets[vehicle.poi][vehicle.location_preset.split(" | ")[0]][vehicle.location_preset.split(" | ")[1]];
     vehicleRef.current.position.set(locationPresetValue.x, locationPresetValue.y+yOffset, locationPresetValue.z);
     if (locationPresetValue.r!=null) vehicleRef.current.rotation.y = degToRad(locationPresetValue.r);
-    
   }, [vehicle, yOffset]);
 
 
