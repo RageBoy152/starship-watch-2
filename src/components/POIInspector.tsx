@@ -5,16 +5,18 @@ import Section from "./UI/section";
 import SBLaunchSiteInspector from "./POIInspectors/SBLaunchSiteInspector";
 import { createClient } from "@/utils/supabase/client";
 import moment from "moment-timezone";
+import SBProductionSiteInspector from "./POIInspectors/SBProductionSiteInspector";
 
 
 export type POIInspectorProps = {
-  updatePOIConfig: (key: string, value: any) => void
+  updatePOIConfig: (key: string, value: any) => Promise<void>
 }
 
 export default function POIInspector() {
   const { activeVehicle, poi } = useGlobals();
   const supabase = createClient();
-
+  
+  
   const updatePOIConfig = async (key: string, value: any) => {
     if (!poi) return;
 
@@ -40,6 +42,7 @@ export default function POIInspector() {
         <hr className="text-label-secondary/25" />
 
         {poi.id == "da41c0c8-7a89-4962-b190-ab0d8a634659" && <SBLaunchSiteInspector updatePOIConfig={updatePOIConfig} />}
+        {poi.id == "0403e1dc-fe0e-401d-835e-092bbfde8772" && <SBProductionSiteInspector updatePOIConfig={updatePOIConfig} />}
       </div>
     </Section>
   );

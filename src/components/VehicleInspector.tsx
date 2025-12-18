@@ -57,7 +57,7 @@ export default function VehicleInspector() {
     await supabase.from("transports").insert({
       route: transportRoute.replace(" → ","-"),
       start_time: Date.now(),
-      end_time: Date.now()+ (poi.id=="0403e1dc-fe0e-401d-835e-092bbfde8772"?(60000*5)+(60000*15):(60000*4)), // 5 min from MB TO HW4, 15 min from GB to HW4 END
+      end_time: Date.now()+ (poi.id=="0403e1dc-fe0e-401d-835e-092bbfde8772"?(60000*5)+(60000*15):(60000/4)), // 5 min from MB TO HW4, 15 min from GB to HW4 END
       vehicle_id: vehicle.id,
       poi: poi.id
     });

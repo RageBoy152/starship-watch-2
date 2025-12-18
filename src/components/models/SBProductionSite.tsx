@@ -3,9 +3,11 @@
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { degToRad } from "three/src/math/MathUtils.js";
+import Door from "./Door";
 
 export default function SBProductionSite(props: any) {
   const { scene } = useGLTF("/models/SBProductionSite/SBProductionSite.gltf");
+
 
   scene.traverse(_child => {
     const child = (_child as THREE.Mesh);
@@ -26,5 +28,11 @@ export default function SBProductionSite(props: any) {
     }
   });
 
-  return <primitive {...props} object={scene} rotation={[0,degToRad(180),0]} />;
+
+  return <>
+    <primitive {...props} object={scene} rotation={[0,degToRad(180),0]} />
+
+    <Door root={scene} config={props.config} prefix="MB1" minScale={0.04} />
+    <Door root={scene} config={props.config} prefix="MB2" minScale={0.04} />
+  </>
 }

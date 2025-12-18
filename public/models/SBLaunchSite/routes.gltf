@@ -8,7 +8,8 @@
 		{
 			"name":"Scene",
 			"nodes":[
-				0
+				0,
+				1
 			]
 		}
 	],
@@ -16,6 +17,21 @@
 		{
 			"mesh":0,
 			"name":"ROUTE_PROD-PAD2",
+			"rotation":[
+				0,
+				0.2588190734386444,
+				0,
+				0.965925931930542
+			],
+			"translation":[
+				-324.72943115234375,
+				1.8816100358963013,
+				-47.36044692993164
+			]
+		},
+		{
+			"mesh":1,
+			"name":"ROUTE_PROD-PAD1",
 			"rotation":[
 				0,
 				0.2588190734386444,
@@ -38,6 +54,18 @@
 						"POSITION":0
 					},
 					"indices":1,
+					"mode":1
+				}
+			]
+		},
+		{
+			"name":"Mesh.003",
+			"primitives":[
+				{
+					"attributes":{
+						"POSITION":2
+					},
+					"indices":3,
 					"mode":1
 				}
 			]
@@ -65,6 +93,28 @@
 			"componentType":5123,
 			"count":120,
 			"type":"SCALAR"
+		},
+		{
+			"bufferView":2,
+			"componentType":5126,
+			"count":97,
+			"max":[
+				356.46759033203125,
+				0,
+				298.3279724121094
+			],
+			"min":[
+				0,
+				0,
+				0
+			],
+			"type":"VEC3"
+		},
+		{
+			"bufferView":3,
+			"componentType":5123,
+			"count":192,
+			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
@@ -79,11 +129,23 @@
 			"byteLength":240,
 			"byteOffset":732,
 			"target":34963
+		},
+		{
+			"buffer":0,
+			"byteLength":1164,
+			"byteOffset":972,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":384,
+			"byteOffset":2136,
+			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":972,
+			"byteLength":2520,
 			"uri":"routes.bin"
 		}
 	]
