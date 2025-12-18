@@ -161,7 +161,8 @@ export default function VehicleInspector() {
     if (!vehicle || !vehicleSite) return;
 
     await supabase.from("vehicles").update({
-      poi: vehicleSite
+      poi: vehicleSite,
+      location_preset: null
     }).eq("id", vehicle.id);
   }
 

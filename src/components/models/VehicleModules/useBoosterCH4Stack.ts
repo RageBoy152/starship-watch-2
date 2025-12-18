@@ -15,6 +15,18 @@ type useBoosterCH4StackProps = {
 
 export function useBoosterCH4Stack({ root, vehicle, barrelOrder }: useBoosterCH4StackProps) {
   const ch4GroupRef = useRef<THREE.Group | null>(null);
+  const fullyStacked = vehicle.milestones.find(ms => ms.name.toLowerCase()=="final stack")?.complete;
+  
+
+  const setGroupWorldPosition = (group: THREE.Object3D, worldPos: THREE.Vector3) => {
+    if (!group.parent) return;
+
+    const localPos = worldPos.clone();
+    group.parent.worldToLocal(localPos);
+    group.position.copy(localPos);
+  }
+  
+
   useEffect(() => {
     if (!root) return;
 
@@ -42,18 +54,6 @@ export function useBoosterCH4Stack({ root, vehicle, barrelOrder }: useBoosterCH4
   }, [root]);
 
 
-  const setGroupWorldPosition = (
-    group: THREE.Object3D,
-    worldPos: THREE.Vector3
-  ) => {
-    if (!group.parent) return;
-
-    const localPos = worldPos.clone();
-    group.parent.worldToLocal(localPos);
-    group.position.copy(localPos);
-  };
-
-  const fullyStacked = vehicle.milestones.find(ms => ms.name.toLowerCase()=="final stack")?.complete;
   useEffect(() => {
     const group = ch4GroupRef.current;
     if (!group || !group.parent) return;
@@ -71,8 +71,7 @@ export function useBoosterCH4Stack({ root, vehicle, barrelOrder }: useBoosterCH4
       const worldTarget = new THREE.Vector3(ch4TankLocation.x, ch4TankLocation.y-heightOffset, ch4TankLocation.z);
       setGroupWorldPosition(group, worldTarget);
     } else {
-      const worldTarget = new THREE.Vector3(vehicle.position.x, vehicle.position.y, vehicle.position.z);
-      setGroupWorldPosition(group, worldTarget);
+      group.position.set(0, 0, 0);
     }
   }, [fullyStacked, vehicle.position]);
 }
