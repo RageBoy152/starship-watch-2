@@ -21,10 +21,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Slider } from "./UI/slider";
 import { twMerge } from "tailwind-merge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./UI/collapsible";
+import { degToRad } from "three/src/math/MathUtils.js";
 
 
 export default function VehicleInspector() {
-  const { activeVehicle: vehicle, transports, routes, poi, POIs, setMoveGizmo, moveGizmo } = useGlobals();
+  const { activeVehicle: vehicle, transports, routes, poi, POIs, setMoveGizmo, moveGizmo, camControlsRef } = useGlobals();
   const vehicleTransport = transports.find(transport => transport.vehicle_id == vehicle?.id);
   const [vehicleTransportProgress, setVehicleTransportProgress] = useState(0);
 
@@ -45,6 +46,30 @@ export default function VehicleInspector() {
     setVehicleSite(vehicle?.poi);
     setRotation(vehicle?.rotation??0);
   }, [vehicle]);
+
+
+  const locate = () => {
+    const controls = camControlsRef.current;
+    if (!controls || !vehicle) return;
+
+    const target = new THREE.Vector3(
+      vehicle.position.x,
+      vehicle.position.y,
+      vehicle.position.z
+    );
+
+    const yOffset = vehicle.type=="ship"?20:40
+
+    controls.setLookAt(
+      target.x+100,
+      target.y+yOffset+20,
+      target.z+50,
+      target.x,
+      target.y+yOffset,
+      target.z,
+      true
+    );
+  }
 
 
   const supabase = createClient();
@@ -162,11 +187,17 @@ export default function VehicleInspector() {
   }
 
 
-  const setLocationPreset = async (location: string, sublocation: string) => {
+  const setLocationPreset = async (location: string, sublocation: string, locationPresetValue: { x: number, y: number, z: number, r?: number }) => {
     if (!vehicle) return;
 
     await supabase.from("vehicles").update({
-      location_preset: `${location} | ${sublocation}`
+      location_preset: `${location} | ${sublocation}`,
+      position: {
+        x: locationPresetValue.x,
+        y: locationPresetValue.y,
+        z: locationPresetValue.z,
+      },
+      rotation: locationPresetValue.r!=undefined ? locationPresetValue.r : vehicle.rotation
     }).eq("id", vehicle.id);
   }
 
@@ -241,7 +272,7 @@ export default function VehicleInspector() {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button className="w-fit p-3">
+                  <Button className="w-fit p-3" onClick={locate}>
                     <LocateFixedIcon className="w-5 h-5" />
                   </Button>
                 </TooltipTrigger>
@@ -346,8 +377,8 @@ export default function VehicleInspector() {
                               <DropdownMenuPortal>
                                 <DropdownMenuSubContent className="w-60">
                                   <DropdownMenuLabel>{location}</DropdownMenuLabel>
-                                  {Object.entries(sublocations).map(([sublocation,]) =>
-                                    <DropdownMenuItem key={sublocation} onClick={() => setLocationPreset(location, sublocation)}>{sublocation[0].toUpperCase()}{sublocation.slice(1,)}</DropdownMenuItem>
+                                  {Object.entries(sublocations).map(([sublocation,value]) =>
+                                    <DropdownMenuItem key={sublocation} onClick={() => setLocationPreset(location, sublocation, value)}>{sublocation[0].toUpperCase()}{sublocation.slice(1,)}</DropdownMenuItem>
                                   )}
                                 </DropdownMenuSubContent>
                               </DropdownMenuPortal>

@@ -2,8 +2,9 @@
 
 import { POI, Transport, Vehicle } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
+import { CameraControls } from "@react-three/drei";
 import { UUID } from "crypto";
-import { createContext, Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react";
+import { createContext, Dispatch, RefObject, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
@@ -21,6 +22,7 @@ type GlobalsContextType = {
   setMoveGizmo: Dispatch<SetStateAction<UUID|null>>
   camControlsEnabled: boolean
   setCamControlsEnabled: Dispatch<SetStateAction<boolean>>
+  camControlsRef: RefObject<CameraControls|null>
   poi?: POI
 }
 
@@ -45,6 +47,7 @@ export const GlobalsProvider = ({ children, poi: _poi }: { children: React.React
   const [chopstickVehicleMarkers, setChopstickVehicleMarkers] = useState<Record<string,THREE.Object3D|null>>({});
   const [moveGizmo, setMoveGizmo] = useState<UUID|null>(null);
   const [camControlsEnabled, setCamControlsEnabled] = useState<boolean>(true);
+  const camControlsRef = useRef<CameraControls|null>(null);
 
   useEffect(() => {
     activeVehicleRef.current = activeVehicle;
@@ -192,7 +195,7 @@ export const GlobalsProvider = ({ children, poi: _poi }: { children: React.React
   }, [_poi]);
 
   return (
-    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi, POIs, chopstickVehicleMarkers, setChopstickVehicleMarkers, moveGizmo, setMoveGizmo, camControlsEnabled, setCamControlsEnabled }}>
+    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi, POIs, chopstickVehicleMarkers, setChopstickVehicleMarkers, moveGizmo, setMoveGizmo, camControlsEnabled, setCamControlsEnabled, camControlsRef }}>
       {children}
     </GlobalsContext.Provider>
   );

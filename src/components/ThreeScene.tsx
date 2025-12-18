@@ -2,18 +2,19 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Environment, OrbitControls } from "@react-three/drei";
+import { CameraControls, Environment, OrbitControls, CameraControlsImpl } from "@react-three/drei";
 import * as THREE from "three";
 import SBProductionSite from "./models/SBProductionSite";
 import Ship from "./models/Ship";
 import SBLaunchSite from "./models/SBLaunchSite";
 import { useGlobals } from "./ContextProviders/GlobalsProvider";
 import Booster from "./models/Booster";
+const { ACTION } = CameraControlsImpl;
 
 
 
 export default function ThreeScene() {
-  const { setActiveVehicle, poiVehicles, poi, camControlsEnabled } = useGlobals();
+  const { setActiveVehicle, poiVehicles, poi, camControlsEnabled, camControlsRef } = useGlobals();
   const clickPos = useRef<{ x: number; y: number } | null>(null);
 
 
@@ -56,12 +57,23 @@ export default function ThreeScene() {
           clickPos.current = null;
         }}
       >
-        <OrbitControls
+        <CameraControls
+          ref={camControlsRef}
+          enabled={camControlsEnabled}
+          smoothTime={0.1}
+          mouseButtons={{
+            left: ACTION.TRUCK,
+            middle: ACTION.DOLLY,
+            right: ACTION.ROTATE,
+            wheel: ACTION.DOLLY
+          }}
+        />
+        {/* <OrbitControls
           enablePan={camControlsEnabled} enableZoom={camControlsEnabled} enableRotate={camControlsEnabled}
           enableDamping={true} dampingFactor={0.1}
           mouseButtons={{ LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }}
           target={[0,0,0]}
-        />
+        /> */}
         <directionalLight position={[0,50,50]} intensity={1.5} castShadow={true} shadow-mapSize={[2048, 2048]} />
         <Environment
           background={true}

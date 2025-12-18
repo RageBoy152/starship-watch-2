@@ -60,7 +60,7 @@ export default function Booster({ vehicle }: { vehicle: Vehicle }) {
 
         {standScene && <primitive object={standScene} />}
 
-        {hoverLabel && <Html center position={[0,20,0]} className="pointer-events-none">
+        {hoverLabel && <Html center position={[0,40,0]} className="pointer-events-none">
           <Section className="py-1 px-2 w-fit text-nowrap bg-bg-primary/80 pointer-events-none uppercase">{vehicle.type} {vehicle.serial_number}</Section>
         </Html>}
       </group>
