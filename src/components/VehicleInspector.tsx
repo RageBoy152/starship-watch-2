@@ -422,7 +422,7 @@ export default function VehicleInspector() {
 
                 <div>
                   <p>Location</p>
-                  <TextInput placeholder="Location" value={vehicle.location} onCommit={(newVal) => { setLocation(newVal); }}  />
+                  <TextInput maxLength={30} placeholder="Location" value={vehicle.location} onCommit={(newVal) => { setLocation(newVal); }}  />
                 </div>
 
 
@@ -440,7 +440,7 @@ export default function VehicleInspector() {
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <textarea ref={textareaRef} value={newDescription} onChange={(e) => setNewDescription(e.currentTarget.value)} placeholder="Description..." className="w-full py-1 px-3 bg-bg-secondary/50 border border-label-secondary/25 outline-none resize-none"></textarea>
+                  <textarea maxLength={400} ref={textareaRef} value={newDescription} onChange={(e) => setNewDescription(e.currentTarget.value)} placeholder="Description..." className="w-full py-1 px-3 bg-bg-secondary/50 border border-label-secondary/25 outline-none resize-none"></textarea>
                 </div>
               </div>
             </CollapsibleContent>
@@ -529,18 +529,18 @@ const VehicleMilestoneEditor = ({ ms, editMilestone }: { ms: VehicleMilestone, e
     <div className="flex gap-2 items-center">
       <Checkbox checked={ms.complete} onCheckedChange={(checked) => editMilestone(checked as boolean, ms.complete_date)} />
       <p>{ms.name}</p>
-      {ms.complete && <TextInput placeholder="YYYY-MM-DD" value={ms.complete_date??""} onCommit={(newVal) => { editMilestone(ms.complete, newVal); }} className="ms-auto w-1/2 px-1 py-0" />}
+      {ms.complete && <TextInput placeholder="YYYY-MM-DD" maxLength={10} value={ms.complete_date??""} onCommit={(newVal) => { editMilestone(ms.complete, newVal); }} className="ms-auto w-1/2 px-1 py-0" />}
     </div>
   );
 }
 
 
 
-const TextInput = ({ placeholder, value, onCommit, className="" }: { placeholder: string, value: string, onCommit: (newVal: string) => void, className?: string }) => {
+const TextInput = ({ placeholder, value, onCommit, maxLength, className="" }: { placeholder: string, value: string, onCommit: (newVal: string) => void, maxLength: number, className?: string }) => {
   const [val, setVal] = useState(value);
   useEffect(() => { setVal(value); }, [value]);
 
   return (
-    <input placeholder={placeholder} type="text" value={val} onChange={(e)=>{ setVal(e.currentTarget.value) }} onKeyDown={(e)=>{ if (e.key == "Enter") onCommit(e.currentTarget.value); }} className={twMerge("w-full py-1 px-3 bg-bg-secondary/50 border border-label-secondary/25 outline-none", className)} />
+    <input placeholder={placeholder} type="text" maxLength={maxLength} value={val} onChange={(e)=>{ setVal(e.currentTarget.value) }} onKeyDown={(e)=>{ if (e.key == "Enter") onCommit(e.currentTarget.value); }} className={twMerge("w-full py-1 px-3 bg-bg-secondary/50 border border-label-secondary/25 outline-none", className)} />
   );
 }

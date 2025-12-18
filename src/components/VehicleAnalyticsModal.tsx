@@ -37,7 +37,7 @@ export default function VehicleAnalyticsModal() {
               <p>First Milestone</p>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p className="font-consolas font-bold text-label-secondary/75 -mt-1 w-fit">{firstMilestone.name} ({moment(firstMilestone.complete_date).fromNow()})</p>
+                  <p className="font-consolas font-bold text-label-secondary/75 -mt-1 w-fit">{firstMilestone.name} ({moment(firstMilestone.complete_date).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "MMM D", sameElse: "MMM D, YYYY" })})</p>
                 </TooltipTrigger>
                 <TooltipContent align="end" side="right">{moment(firstMilestone.complete_date).format("YYYY-MM-DD")}</TooltipContent>
               </Tooltip>
@@ -47,7 +47,7 @@ export default function VehicleAnalyticsModal() {
               <p>Recent Milestone</p>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p className="font-consolas font-bold text-label-secondary/75 -mt-1 w-fit">{recentMilestone.name} ({moment(recentMilestone.complete_date).fromNow()})</p>
+                  <p className="font-consolas font-bold text-label-secondary/75 -mt-1 w-fit">{recentMilestone.name} ({moment(recentMilestone.complete_date).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "MMM D", sameElse: "MMM D, YYYY" })})</p>
                 </TooltipTrigger>
                 <TooltipContent align="end" side="right">{moment(recentMilestone.complete_date).format("YYYY-MM-DD")}</TooltipContent>
               </Tooltip>
