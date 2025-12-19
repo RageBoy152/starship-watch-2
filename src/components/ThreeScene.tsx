@@ -48,21 +48,21 @@ export default function ThreeScene() {
         <directionalLight
           position={[-350,200,-60]}
           intensity={1.5}
-          castShadow={true}
-          onUpdate={light => {
-            light.shadow.mapSize.set(4096*2, 4096*2);
-            light.shadow.bias = -0.001;
+          // castShadow={true}
+          // onUpdate={light => {
+          //   light.shadow.mapSize.set(4096/2, 4096/2);
+          //   light.shadow.bias = -0.001;
 
-            const cam = light.shadow.camera as THREE.OrthographicCamera;
-            const BOUNDS = 1000;
-            cam.left = -BOUNDS;
-            cam.right = BOUNDS;
-            cam.top = BOUNDS;
-            cam.bottom = -BOUNDS;
-            cam.near = 1;
-            cam.far = 1000;
-            cam.updateProjectionMatrix();
-          }}
+          //   const cam = light.shadow.camera as THREE.OrthographicCamera;
+          //   const BOUNDS = 1000;
+          //   cam.left = -BOUNDS;
+          //   cam.right = BOUNDS;
+          //   cam.top = BOUNDS;
+          //   cam.bottom = -BOUNDS;
+          //   cam.near = 1;
+          //   cam.far = 1000;
+          //   cam.updateProjectionMatrix();
+          // }}
         />
         <Environment
           background={true}

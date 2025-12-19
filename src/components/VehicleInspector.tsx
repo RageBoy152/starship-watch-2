@@ -39,6 +39,9 @@ export default function VehicleInspector() {
   useEffect(() => { if (vehicle) setNewDescription(vehicle.description??""); }, [vehicle?.description]);
   useEffect(() => { if (textareaRef.current) autoResize(textareaRef.current); }, [newDescription]);
 
+  const [newLocation, setNewLocation] = useState(vehicle?.location??"");
+  useEffect(() => { if (vehicle) setNewLocation(vehicle.location); }, [vehicle?.location]);
+
   const textareaRef = useRef<HTMLTextAreaElement|null>(null);
   const autoResize = (el: HTMLTextAreaElement) => {
     el.style.height = 'auto';
@@ -227,7 +230,7 @@ export default function VehicleInspector() {
     <div className="flex gap-2">
       {stackingDiagramActive && <VehicleStackingDiagram vehicle={vehicle} closeDiagram={() => setStackingDiagramActive(false)} />}
     
-      <Section className={`${!vehicle?"opacity-0":"opacity-100"} transition-opacity w-sm max-h-[calc(100dvh-2rem)] scrollbar overflow-y-auto`}>
+      <Section className={`${!vehicle?"opacity-0":"opacity-100"} transition-opacity w-sm max-h-[calc(100dvh-2rem)] scrollbar overflow-y-auto h-fit`}>
         <div className="flex flex-col gap-3 uppercase">
 
           <div className="flex items-center justify-between">
@@ -353,19 +356,19 @@ export default function VehicleInspector() {
 
                 {poi && <div>
                   <div className="flex justify-between items-center">
-                    <p>Location</p>
+                    <p>Position</p>
                     <p className="font-consolas font-bold text-label-secondary/75 -mt-1">{vehicle.position.x.toFixed(2)}, {vehicle.position.y.toFixed(2)}, {vehicle.position.z.toFixed(2)}</p>
                   </div>
                   <div className="flex gap-1">
                     <DropdownMenu>
                       <DropdownMenuTrigger disabled={vehicleTransport!=undefined||parentChopsticks!=undefined} asChild>
                         <button className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 text-sm flex justify-between items-center text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 px-3 py-1 w-full uppercase font-consolas font-bold">
-                          <p>{vehicle.location_preset??"Location Preset"}</p>
+                          <p>{vehicle.location_preset??"Position Preset"}</p>
                           <ChevronDownIcon className="w-4 h-4" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-80">
-                        <DropdownMenuLabel>Location Preset</DropdownMenuLabel>
+                        <DropdownMenuLabel>Position Preset</DropdownMenuLabel>
                         <DropdownMenuGroup>
                           {POIs.filter(_poi => locationPresets[_poi.id] != undefined).map(_poi =>
                             <DropdownMenuSub key={_poi.id}>
@@ -420,8 +423,18 @@ export default function VehicleInspector() {
                 <div>
                   <div className="flex items-center justify-between">
                     <p>Location</p>
+                    {(newLocation != (vehicle.location??"")) && <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button className="w-fit p-1" onClick={() => setLocation(newLocation)}>
+                          <SaveIcon className="w-3 h-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Save Changes</p>
+                      </TooltipContent>
+                    </Tooltip>}
                   </div>
-                  <TextInput maxLength={30} placeholder="Location" value={vehicle.location} onCommit={(newVal) => { setLocation(newVal); }}  />
+                  <input placeholder="Location" type="text" maxLength={30} value={newLocation} onChange={(e)=>{ setNewLocation(e.currentTarget.value) }} className="w-full py-1 px-3 bg-bg-secondary/50 border border-label-secondary/25 outline-none" />
                 </div>
 
 
@@ -503,22 +516,27 @@ export default function VehicleInspector() {
 
 
 const VehicleMilestoneEditor = ({ ms, editMilestone }: { ms: VehicleMilestone, editMilestone: (newChecked: boolean, newDate?: string) => void }) => {
+  const [newCompleteDate, setNewCompleteDate] = useState(ms.complete_date);
+  useEffect(() => { setNewCompleteDate(ms.complete_date); }, [ms]);
+
   return (
     <div className="flex gap-2 items-center">
       <Checkbox checked={ms.complete} onCheckedChange={(checked) => editMilestone(checked as boolean, ms.complete_date)} />
       <p>{ms.name}</p>
-      {ms.complete && <TextInput placeholder="YYYY-MM-DD" maxLength={10} value={ms.complete_date??""} onCommit={(newVal) => { editMilestone(ms.complete, newVal); }} className="ms-auto w-1/2 px-1 py-0" />}
+      {ms.complete && <div className="w-1/2 ms-auto flex gap-1 items-center">
+        <input placeholder="YYYY-MM-DD" type="text" maxLength={10} value={newCompleteDate} onChange={(e)=>{ setNewCompleteDate(e.currentTarget.value) }} className="bg-bg-secondary/50 border border-label-secondary/25 outline-none w-full px-1 py-0" />
+
+        {(newCompleteDate != (ms.complete_date??"")) && <Tooltip>
+          <TooltipTrigger asChild>
+            <Button className="w-fit p-1.5" onClick={() => editMilestone(ms.complete, newCompleteDate)}>
+              <SaveIcon className="w-3 h-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>Save Changes</p>
+          </TooltipContent>
+        </Tooltip>}  
+      </div>}
     </div>
-  );
-}
-
-
-
-const TextInput = ({ placeholder, value, onCommit, maxLength, className="" }: { placeholder: string, value: string, onCommit: (newVal: string) => void, maxLength: number, className?: string }) => {
-  const [val, setVal] = useState(value);
-  useEffect(() => { setVal(value); }, [value]);
-
-  return (
-    <input placeholder={placeholder} type="text" maxLength={maxLength} value={val} onChange={(e)=>{ setVal(e.currentTarget.value) }} onKeyDown={(e)=>{ if (e.key == "Enter") onCommit(e.currentTarget.value); }} className={twMerge("w-full py-1 px-3 bg-bg-secondary/50 border border-label-secondary/25 outline-none", className)} />
   );
 }
