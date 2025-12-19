@@ -1,12 +1,3 @@
-{
-	"asset":{
-		"generator":"Khronos glTF Blender I/O v4.0.44",
-		"version":"2.0"
-	},
-	"scene":0,
-	"scenes":[
-		{
-			"name":"Scene"
-		}
-	]
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:a82901cbbf590222a077a1676ecbac72c056f6f872616f8fbe59e50e53e87225
+size 152
