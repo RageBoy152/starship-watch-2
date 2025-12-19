@@ -25,11 +25,11 @@ export default function SitePageHeading() {
       <div className="flex gap-1">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button className="w-fit p-2">
-              <Link href="/">
+            <Link href="/">
+              <Button className="w-fit p-2">
                 <GlobeIcon className="w-4 h-4" />
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </TooltipTrigger>
           <TooltipContent side="bottom">
             <div className="flex items-center gap-2">

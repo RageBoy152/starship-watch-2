@@ -33,7 +33,7 @@ export default function SBLaunchSite(props: any) {
   return <>
     <primitive {...props} object={scene} />
 
-    <Chopstick root={scene} prefix="PAD2" config={props.config} chopstickHeights={[24, 28.1, 54, 63.5, 107.39]} zeroRotationOffset={10.5} maxAngle={75.3} onVehicleMarker={(marker) => setChopstickVehicleMarkers(prev => ({ ...prev, "PAD2": marker }))} />
+    <Chopstick root={scene} prefix="PAD2" config={props.config} chopstickHeights={[24, 28.1, 52.16, 62.3, 107.39]} zeroRotationOffset={10.5} maxAngle={75.3} onVehicleMarker={(marker) => setChopstickVehicleMarkers(prev => ({ ...prev, "PAD2": marker }))} />
     <Chopstick root={scene} prefix="PAD1" config={props.config} chopstickHeights={[24.6773, 28.1, 54, 63.5, 107.39]} zeroRotationOffset={2.62} maxAngle={52.4} onVehicleMarker={(marker) => setChopstickVehicleMarkers(prev => ({ ...prev, "PAD1": marker }))} />
   </>
 }

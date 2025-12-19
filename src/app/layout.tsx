@@ -11,8 +11,8 @@ const chakra = Chakra_Petch({
 
 
 export const metadata: Metadata = {
-  title: "Starship Watch | Pre-Alpha",
-  description: "Attempt 2",
+  title: "Starship Watch | Alpha",
+  description: "Very epic 3d thing (we're so back)",
 };
 
 

@@ -2,7 +2,7 @@
 
 import { moveTowards } from "@/lib/utils";
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { degToRad } from "three/src/math/MathUtils.js";
 
@@ -31,10 +31,9 @@ export default function Chopstick({ root, prefix, config, chopstickHeights, zero
   // instant snap to target on first load - prevents unintended animation on page load
   const firstLoad = useRef(true);
 
-  // speed controls - should be added to config later
-  const carriageSpeed = 7;
-  const armSpeed = 1;
-
+  // speed state
+  const [carriageSpeed, setCarriageSpeed] = useState(0);
+  const [armSpeed, setArmSpeed] = useState(0);
 
 
   useEffect(() => {
@@ -45,8 +44,14 @@ export default function Chopstick({ root, prefix, config, chopstickHeights, zero
     const rotation = config[`${prefix.toLowerCase()}_chopstick_rotation`];
     const open = config[`${prefix.toLowerCase()}_chopstick_open`];
 
+    const _carriageSpeed = config[`${prefix.toLowerCase()}_chopstick_carriage_speed`];
+    const _armSpeed = config[`${prefix.toLowerCase()}_chopstick_arm_speed`];
+
     const value = chopstickHeights[preset];
-    if (value == null || rotation == null || open == null) return;
+    if (value == null || rotation == null || open == null || _carriageSpeed == null || _armSpeed == null) return;
+
+    setCarriageSpeed(_carriageSpeed*10);
+    setArmSpeed(_armSpeed);
 
     const MIN = -(maxAngle-zeroRotationOffset);
     const MAX = maxAngle-zeroRotationOffset;

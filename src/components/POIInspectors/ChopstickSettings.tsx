@@ -17,12 +17,17 @@ type ChopstickSettingsProps = {
 
 export default function ChopstickSettings({ prefix, updatePOIConfig, maxAngle }: ChopstickSettingsProps) {
   const { poiVehicles, poi, transports } = useGlobals();
+  const [carriageSpeed, setCarriageSpeed] = useState(0);
+  const [armSpeed, setArmSpeed] = useState(0);
   const [stickRotation, setstickRotation] = useState(0);
   const [stickOpen, setStickOpen] = useState(0);
   const supabase = createClient();
 
 
   useEffect(() => {
+    setCarriageSpeed(poi?.config[`${prefix.toLowerCase()}_chopstick_carriage_speed`]??0);
+    setArmSpeed(poi?.config[`${prefix.toLowerCase()}_chopstick_arm_speed`]??0);
+
     setstickRotation(poi?.config[`${prefix.toLowerCase()}_chopstick_rotation`]??0);
     setStickOpen(poi?.config[`${prefix.toLowerCase()}_chopstick_open`]??0);
   }, [poi]);
@@ -62,6 +67,20 @@ export default function ChopstickSettings({ prefix, updatePOIConfig, maxAngle }:
             </SelectGroup>
           </SelectContent>
         </Select>
+      </div>
+      <div>
+        <div className="flex items-center justify-between">
+          <p>Carriage Speed</p>
+          <p className="font-consolas font-bold text-sm">{carriageSpeed.toFixed(2)}</p>
+        </div>
+        <Slider min={0} max={1} step={0.01} value={[carriageSpeed]} onValueChange={(value) => setCarriageSpeed(value[0])} onValueCommit={(value) => updatePOIConfig(`${prefix.toLowerCase()}_chopstick_carriage_speed`, value[0])} />
+      </div>
+      <div>
+        <div className="flex items-center justify-between">
+          <p>Arm Speed</p>
+          <p className="font-consolas font-bold text-sm">{armSpeed.toFixed(2)}</p>
+        </div>
+        <Slider min={0} max={1} step={0.01} value={[armSpeed]} onValueChange={(value) => setArmSpeed(value[0])} onValueCommit={(value) => updatePOIConfig(`${prefix.toLowerCase()}_chopstick_arm_speed`, value[0])} />
       </div>
       <div>
         <div className="flex items-center justify-between">

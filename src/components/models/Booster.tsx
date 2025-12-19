@@ -40,7 +40,7 @@ export default function Booster({ vehicle }: { vehicle: Vehicle }) {
   // add modules
   const { standScene, yOffset } = useStandAttachment(vehicle.stand);
   useTransportRoute({ vehicle, ref: vehicleRef, yOffset: yOffset });
-  const wasAttached = useChopstickAttachment({ vehicle, ref: vehicleRef, chopstickYOffset: -63.5, chopstickRotationOffset: -4 });
+  const wasAttached = useChopstickAttachment({ vehicle, ref: vehicleRef, chopstickYOffset: -61.715, chopstickRotationOffset: -4 });
   useMilestoneVisibility({ root: scene, vehicle, barrelOrder: BARREL_ORDER });
   useBoosterCH4Stack({ root: scene, vehicle, barrelOrder: BARREL_ORDER });
 
