@@ -15,6 +15,7 @@ import { locationPresets } from "@/lib/tempData";
 import { useBoosterCH4Stack } from "./VehicleModules/useBoosterCH4Stack";
 import { useMilestoneVisibility } from "./VehicleModules/useMilestoneVisibility";
 import { useGlobals } from "../ContextProviders/GlobalsProvider";
+import SPMT from "./spmt";
 
 
 const BARREL_ORDER = [
@@ -49,6 +50,7 @@ export default function Booster({ vehicle }: { vehicle: Vehicle }) {
 
   // add modules
   const { standScene, yOffset } = useStandAttachment(vehicle.stand);
+
   useTransportRoute({ vehicle, ref: vehicleRef, yOffset: yOffset });
   const wasAttached = useChopstickAttachment({ vehicle, ref: vehicleRef, chopstickYOffset: -61.715, chopstickRotationOffset: -4 });
   useMilestoneVisibility({ root: scene, vehicle, barrelOrder: BARREL_ORDER });
@@ -70,19 +72,25 @@ export default function Booster({ vehicle }: { vehicle: Vehicle }) {
   }, [vehicle, yOffset]);
 
 
+
   return (
     <>
       <group ref={vehicleRef} name={`VEHICLE_${vehicle?.id}`} onPointerEnter={() => setHoverLabel(true)} onPointerLeave={() => setHoverLabel(false)}>
         <primitive object={scene} />
 
-        {standScene && <primitive object={standScene} />}
+        {standScene && <primitive object={standScene}>
+          {true && <>
+            <SPMT yOffset={yOffset} zOffset={-3.5} />
+            <SPMT yOffset={yOffset} zOffset={3.5} />
+          </>}
+        </primitive>}
 
         {hoverLabel && <Html center position={[0,40,0]} className="pointer-events-none">
           <Section className="py-1 px-2 w-fit text-nowrap bg-bg-primary/80 pointer-events-none uppercase">{vehicle.type} {vehicle.serial_number}</Section>
         </Html>}
       </group>
 
-      <ReusableTransformControls ref={vehicleRef} vehicle={vehicle} />
+      <ReusableTransformControls ref={vehicleRef} vehicle={vehicle} yOffset={yOffset} />
     </>
   );
 }

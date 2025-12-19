@@ -10,9 +10,10 @@ import * as THREE from "three";
 type ReusableTransformControlsProps = {
   vehicle: Vehicle
   ref: React.RefObject<THREE.Object3D|null>
+  yOffset: number
 }
 
-export default function ReusableTransformControls({ vehicle, ref }: ReusableTransformControlsProps) {
+export default function ReusableTransformControls({ vehicle, ref, yOffset }: ReusableTransformControlsProps) {
   const { moveGizmo, setCamControlsEnabled } = useGlobals();
   const supabase = createClient();
 
@@ -23,7 +24,7 @@ export default function ReusableTransformControls({ vehicle, ref }: ReusableTran
     await supabase.from("vehicles").update({
       position: {
         x: ref.current.position.x,
-        y: ref.current.position.y,
+        y: ref.current.position.y-yOffset,
         z: ref.current.position.z,
       },
       location_preset: null

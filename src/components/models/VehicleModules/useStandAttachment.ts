@@ -17,7 +17,7 @@ export function useStandAttachment(stand?: string): UseStandAttachmentResult {
     if (!stand) return 0;
 
     const marker = scene.getObjectByName("AFT_MARKER");
-    return marker ? Math.abs(marker.position.y) : 0;
+    return marker ? (Math.abs(marker.position.y) + (-0.388611 + 2.30841)) : 0;
   }, [scene, stand]);
 
   return {

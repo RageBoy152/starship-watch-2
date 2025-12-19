@@ -129,7 +129,7 @@ export default function VehicleInspector() {
     await supabase.from("vehicles").update({
       position: {
         x: vehicle3D.position.x,
-        y: vehicle3D.position.y,
+        y: vehicle3D.position.y-(vehicle.stand?(-0.388611 + 2.30841+3.21872):0),
         z: vehicle3D.position.z,
       },
       rotation: Math.round(clamp360(radToDeg(vehicle3D.rotation.y)+(vehicle.type=="booster"?0:0)))
