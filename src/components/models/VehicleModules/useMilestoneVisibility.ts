@@ -23,17 +23,18 @@ type useMilestoneVisibilityProps = {
 }
 
 export function useMilestoneVisibility({ root, vehicle, barrelOrder }: useMilestoneVisibilityProps) {
-  vehicle.milestones.forEach(ms => {
-    const objParent = root.getObjectByName(ms.name.replace(":","_").replace(/\s+/g, "_"));
-    objParent?.traverse(_child => {
-      const child = _child as THREE.Mesh;
-      child.visible = ms.complete;
-    });
-  });
-
-
   useEffect(() => {
     if (!root) return;
+
+    vehicle.milestones.forEach(ms => {
+      const objParent = root.getObjectByName(ms.name.replace(":","_").replace(/\s+/g, "_"));
+      objParent?.traverse(_child => {
+        const child = _child as THREE.Mesh;
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.visible = ms.complete;
+      });
+    });
     
     let missingBelow = 0;
     let largestOffset = 0;
