@@ -23,6 +23,9 @@ type GlobalsContextType = {
   camControlsEnabled: boolean
   setCamControlsEnabled: Dispatch<SetStateAction<boolean>>
   camControlsRef: RefObject<CameraControls|null>
+  registerVehicleObject: (id: string, obj: THREE.Object3D) => void
+  unregisterVehicleObject: (id: string) => void
+  vehicleObjectRefs: RefObject<Record<string, THREE.Object3D>>
   poi?: POI
 }
 
@@ -48,6 +51,10 @@ export const GlobalsProvider = ({ children, poi: _poi }: { children: React.React
   const [moveGizmo, setMoveGizmo] = useState<UUID|null>(null);
   const [camControlsEnabled, setCamControlsEnabled] = useState<boolean>(true);
   const camControlsRef = useRef<CameraControls|null>(null);
+  const vehicleObjectRefs = useRef<Record<string, THREE.Object3D>>({});
+
+  const registerVehicleObject = (id: string, obj: THREE.Object3D) => { vehicleObjectRefs.current[id] = obj; }
+  const unregisterVehicleObject = (id: string) => { delete vehicleObjectRefs.current[id]; }
 
   useEffect(() => {
     activeVehicleRef.current = activeVehicle;
@@ -195,7 +202,7 @@ export const GlobalsProvider = ({ children, poi: _poi }: { children: React.React
   }, [_poi]);
 
   return (
-    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi, POIs, chopstickVehicleMarkers, setChopstickVehicleMarkers, moveGizmo, setMoveGizmo, camControlsEnabled, setCamControlsEnabled, camControlsRef }}>
+    <GlobalsContext.Provider value={{ activeVehicle, setActiveVehicle, transports, routes, poiVehicles, poi, POIs, chopstickVehicleMarkers, setChopstickVehicleMarkers, moveGizmo, setMoveGizmo, camControlsEnabled, setCamControlsEnabled, camControlsRef, registerVehicleObject, unregisterVehicleObject, vehicleObjectRefs }}>
       {children}
     </GlobalsContext.Provider>
   );

@@ -4,7 +4,7 @@ import Section from "./UI/section";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./UI/tooltip";
 import { Button } from "./UI/Button";
 import { CalendarRangeIcon, ChartNoAxesCombinedIcon, ChevronDownIcon, LocateFixedIcon, Move3DIcon, SaveIcon } from "lucide-react";
-import { getVehicleStatusClass } from "@/lib/utils";
+import { clamp360, getVehicleStatusClass } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import VehicleStackingDiagram from "./VehicleStackingDiagram";
 import { Checkbox } from "./UI/checkbox";
@@ -21,14 +21,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Slider } from "./UI/slider";
 import { twMerge } from "tailwind-merge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./UI/collapsible";
+import { useThree } from "@react-three/fiber";
+import { radToDeg } from "three/src/math/MathUtils.js";
 
 
 export default function VehicleInspector() {
-  const { activeVehicle: vehicle, transports, routes, poi, POIs, setMoveGizmo, moveGizmo, camControlsRef } = useGlobals();
+  const { activeVehicle: vehicle, transports, routes, poi, POIs, setMoveGizmo, moveGizmo, camControlsRef, vehicleObjectRefs } = useGlobals();
   const vehicleTransport = transports.find(transport => transport.vehicle_id == vehicle?.id);
   const [vehicleTransportProgress, setVehicleTransportProgress] = useState(0);
+  const [vehicle3D, setVehicle3D] = useState<THREE.Object3D|undefined>(undefined);
 
-  const [vehicleSite, setVehicleSite] = useState<string|undefined>(vehicle?.poi);
   const [rotation, setRotation] = useState(vehicle?.rotation??0);
 
   const parentChopsticks = (!poi||!vehicle)?undefined :Object.entries(poi.config).find(([key, value]) => key.match(/^pad\d+_chopstick_vehicle$/i) && value == vehicle.id);
@@ -44,7 +46,9 @@ export default function VehicleInspector() {
   }
 
   useEffect(() => {
-    setVehicleSite(vehicle?.poi);
+    if (!vehicle) { setVehicle3D(undefined); }
+    else setVehicle3D(vehicleObjectRefs.current[vehicle.id]);
+
     setRotation(vehicle?.rotation??0);
   }, [vehicle]);
 
@@ -80,7 +84,10 @@ export default function VehicleInspector() {
       setVehicleTransportProgress(0);
       return;
     }
-    else setTransportRoute(vehicleTransport.route);
+    else {
+      setMoveGizmo(null);
+      setTransportRoute(vehicleTransport.route);
+    }
 
     const interval = setInterval(() => {
       const now = Date.now();
@@ -102,7 +109,7 @@ export default function VehicleInspector() {
     await supabase.from("transports").insert({
       route: transportRoute.replace(" → ","-"),
       start_time: Date.now(),
-      end_time: Date.now()+ (poi.id=="0403e1dc-fe0e-401d-835e-092bbfde8772"?(60000*5)+(60000*15):(60000/4)), // 5 min from MB TO HW4, 15 min from GB to HW4 END
+      end_time: Date.now()+ (poi.id=="0403e1dc-fe0e-401d-835e-092bbfde8772"?(60000*5):(60000)), // 5 min from MB TO HW4, 15 min from GB to HW4 END
       vehicle_id: vehicle.id,
       poi: poi.id
     });
@@ -113,30 +120,20 @@ export default function VehicleInspector() {
   }
 
   const stopTransport = async () => {
-    if (!vehicleTransport || !vehicle) return;
-
-    const route = routes[vehicleTransport?.route.toUpperCase()];
-    const point = route.getPointAt(vehicleTransportProgress);
-
-    const tangent = route.getTangentAt(vehicleTransportProgress).normalize().multiplyScalar(vehicle.type=="ship"?-1:1); // rotate 180deg
-    const tangentXZ = new THREE.Vector3(tangent.x, 0, tangent.z).normalize();
-    const yRotationDeg = THREE.MathUtils.radToDeg(Math.atan2(tangentXZ.x, tangentXZ.z));
-
+    if (!vehicleTransport || !vehicle || !vehicle3D) return;
 
     // update vehicle pos
-    if (point) await supabase.from("vehicles").update({
+    await supabase.from("vehicles").update({
       position: {
-        x: point.x,
-        y: vehicle.position.y,
-        z: point.z,
+        x: vehicle3D.position.x,
+        y: vehicle3D.position.y,
+        z: vehicle3D.position.z,
       },
-      rotation: Math.round(yRotationDeg)
+      rotation: Math.round(clamp360(radToDeg(vehicle3D.rotation.y)+(vehicle.type=="booster"?0:0)))
     }).eq("id", vehicle.id);
 
     // remove transport
     await supabase.from("transports").delete().eq("id", vehicleTransport.id);
-
-    setTransportRoute(undefined);
   }
 
 
@@ -421,7 +418,9 @@ export default function VehicleInspector() {
 
 
                 <div>
-                  <p>Location</p>
+                  <div className="flex items-center justify-between">
+                    <p>Location</p>
+                  </div>
                   <TextInput maxLength={30} placeholder="Location" value={vehicle.location} onCommit={(newVal) => { setLocation(newVal); }}  />
                 </div>
 
@@ -429,7 +428,7 @@ export default function VehicleInspector() {
                 <div>
                   <div className="flex items-center justify-between">
                     <p>Description</p>
-                    <Tooltip>
+                    {(newDescription != (vehicle.description??"")) && <Tooltip>
                       <TooltipTrigger asChild>
                         <Button className="w-fit p-1" onClick={() => setDescription(newDescription)}>
                           <SaveIcon className="w-3 h-3" />
@@ -438,7 +437,7 @@ export default function VehicleInspector() {
                       <TooltipContent side="bottom">
                         <p>Save Changes</p>
                       </TooltipContent>
-                    </Tooltip>
+                    </Tooltip>}
                   </div>
                   <textarea maxLength={400} ref={textareaRef} value={newDescription} onChange={(e) => setNewDescription(e.currentTarget.value)} placeholder="Description..." className="w-full py-1 px-3 bg-bg-secondary/50 border border-label-secondary/25 outline-none resize-none"></textarea>
                 </div>

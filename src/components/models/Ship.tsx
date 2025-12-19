@@ -13,6 +13,7 @@ import { useChopstickAttachment } from "./VehicleModules/useChopstickAttachment"
 import ReusableTransformControls from "./VehicleModules/ReusableTransformControls";
 import { locationPresets } from "@/lib/tempData";
 import { useMilestoneVisibility } from "./VehicleModules/useMilestoneVisibility";
+import { useGlobals } from "../ContextProviders/GlobalsProvider";
 
 
 const BARREL_ORDER = [
@@ -31,6 +32,15 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
   const scene = useMemo(() => SkeletonUtils.clone(gltfScene), [gltfScene]);
   const vehicleRef = useRef<THREE.Group|null>(null);
   const [hoverLabel, setHoverLabel] = useState(false);
+  const { registerVehicleObject, unregisterVehicleObject } = useGlobals();
+  
+  
+  // register 3d object ref
+  useEffect(() => {
+    if (!vehicleRef.current) return;
+    registerVehicleObject(vehicle.id, vehicleRef.current);
+    return () => { unregisterVehicleObject(vehicle.id); }
+  }, [vehicle.id]);
 
 
   // add modules
@@ -61,7 +71,7 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
 
   return (
     <>
-      <group ref={vehicleRef} onPointerEnter={() => setHoverLabel(true)} onPointerLeave={() => setHoverLabel(false)}>
+      <group ref={vehicleRef} name={`VEHICLE_${vehicle?.id}`} onPointerEnter={() => setHoverLabel(true)} onPointerLeave={() => setHoverLabel(false)}>
         <primitive object={scene} />
 
         {standScene && <primitive object={standScene} />}

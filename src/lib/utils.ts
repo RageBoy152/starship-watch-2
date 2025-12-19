@@ -54,3 +54,5 @@ export function moveTowards(current: number, target: number, maxDelta: number) {
   if (Math.abs(delta) <= maxDelta) return target;
   return current + Math.sign(delta) * maxDelta;
 }
+
+export const clamp360 = (deg: number) => ((deg % 360) + 360) % 360;

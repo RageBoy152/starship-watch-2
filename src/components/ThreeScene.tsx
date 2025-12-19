@@ -68,12 +68,6 @@ export default function ThreeScene() {
             wheel: ACTION.DOLLY
           }}
         />
-        {/* <OrbitControls
-          enablePan={camControlsEnabled} enableZoom={camControlsEnabled} enableRotate={camControlsEnabled}
-          enableDamping={true} dampingFactor={0.1}
-          mouseButtons={{ LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }}
-          target={[0,0,0]}
-        /> */}
         <directionalLight position={[0,50,50]} intensity={1.5} castShadow={true} shadow-mapSize={[2048, 2048]} />
         <Environment
           background={true}
