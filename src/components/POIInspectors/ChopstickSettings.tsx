@@ -64,6 +64,7 @@ export default function ChopstickSettings({ prefix, updatePOIConfig, maxAngle }:
               <SelectItem value="2">Lift B</SelectItem>
               <SelectItem value="3">Stack B</SelectItem>
               <SelectItem value="4">Stack S (Launch)</SelectItem>
+              <SelectItem value="5">Top</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
