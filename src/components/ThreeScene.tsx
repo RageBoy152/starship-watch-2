@@ -67,7 +67,7 @@ export default function ThreeScene() {
         <Environment
           background={true}
           backgroundIntensity={1}
-          environmentIntensity={0.1} // optional intensity factor (default: 1, only works with three 0.163 and up)
+          environmentIntensity={0.3} // optional intensity factor (default: 1, only works with three 0.163 and up)
           files="/hdr/kloppenheim_03_puresky_1k.hdr"
         />
 
