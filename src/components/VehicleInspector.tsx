@@ -4,7 +4,7 @@ import Section from "./UI/section";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./UI/tooltip";
 import { Button } from "./UI/Button";
 import { CalendarRangeIcon, ChartNoAxesCombinedIcon, ChevronDownIcon, LocateFixedIcon, Move3DIcon, SaveIcon } from "lucide-react";
-import { getVehicleStatusClass, groupPOIsByLocation } from "@/lib/utils";
+import { getVehicleStatusClass } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import VehicleStackingDiagram from "./VehicleStackingDiagram";
 import { Checkbox } from "./UI/checkbox";
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import * as THREE from "three";
 import { createClient } from "@/utils/supabase/client";
 import moment from "moment-timezone";
-import { stands, VehicleMilestone, VehicleStatus } from "@/lib/types";
+import { POI, stands, VehicleMilestone, VehicleStatus } from "@/lib/types";
 import { locationPresets } from "@/lib/tempData";
 import { Dialog, DialogTrigger } from "./UI/dialog";
 import VehicleAnalyticsModal from "./VehicleAnalyticsModal";
@@ -21,7 +21,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Slider } from "./UI/slider";
 import { twMerge } from "tailwind-merge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./UI/collapsible";
-import { degToRad } from "three/src/math/MathUtils.js";
 
 
 export default function VehicleInspector() {
@@ -157,16 +156,6 @@ export default function VehicleInspector() {
   }
 
 
-  const changeVehicleSite = async () => {
-    if (!vehicle || !vehicleSite) return;
-
-    await supabase.from("vehicles").update({
-      poi: vehicleSite,
-      location_preset: null
-    }).eq("id", vehicle.id);
-  }
-
-
   const setVehicleStatus = async (newStatus: VehicleStatus) => {
     if (!vehicle || !newStatus) return;
 
@@ -195,7 +184,7 @@ export default function VehicleInspector() {
   }
 
 
-  const setLocationPreset = async (location: string, sublocation: string, locationPresetValue: { x: number, y: number, z: number, r?: number }) => {
+  const setLocationPreset = async (newPOI: POI, location: string, sublocation: string, locationPresetValue: { x: number, y: number, z: number, r?: number }) => {
     if (!vehicle) return;
 
     await supabase.from("vehicles").update({
@@ -206,7 +195,8 @@ export default function VehicleInspector() {
         y: locationPresetValue.y,
         z: locationPresetValue.z,
       },
-      rotation: locationPresetValue.r!=undefined ? locationPresetValue.r : vehicle.rotation
+      rotation: locationPresetValue.r!=undefined ? locationPresetValue.r : vehicle.rotation,
+      poi: newPOI.id
     }).eq("id", vehicle.id);
   }
 
@@ -380,14 +370,24 @@ export default function VehicleInspector() {
                       <DropdownMenuContent align="start" className="w-80">
                         <DropdownMenuLabel>Location Preset</DropdownMenuLabel>
                         <DropdownMenuGroup>
-                          {Object.entries(locationPresets[poi.id]).map(([location, sublocations]) =>
-                            <DropdownMenuSub key={location}>
-                              <DropdownMenuSubTrigger>{location[0].toUpperCase()}{location.slice(1,)}</DropdownMenuSubTrigger>
+                          {POIs.filter(_poi => locationPresets[_poi.id] != undefined).map(_poi =>
+                            <DropdownMenuSub key={_poi.id}>
+                              <DropdownMenuSubTrigger>{_poi.name}</DropdownMenuSubTrigger>
                               <DropdownMenuPortal>
                                 <DropdownMenuSubContent className="w-60">
-                                  <DropdownMenuLabel>{location}</DropdownMenuLabel>
-                                  {Object.entries(sublocations).map(([sublocation,value]) =>
-                                    <DropdownMenuItem key={sublocation} onClick={() => setLocationPreset(location, sublocation, value)}>{sublocation[0].toUpperCase()}{sublocation.slice(1,)}</DropdownMenuItem>
+                                  <DropdownMenuLabel>{_poi.name}</DropdownMenuLabel>
+                                  {Object.entries(locationPresets[_poi.id]).map(([location, sublocations]) =>
+                                    <DropdownMenuSub key={location}>
+                                      <DropdownMenuSubTrigger>{location[0].toUpperCase()}{location.slice(1,)}</DropdownMenuSubTrigger>
+                                      <DropdownMenuPortal>
+                                        <DropdownMenuSubContent className="w-40">
+                                          <DropdownMenuLabel>{location}</DropdownMenuLabel>
+                                          {Object.entries(sublocations).map(([sublocation,value]) =>
+                                            <DropdownMenuItem key={sublocation} onClick={() => setLocationPreset(_poi, location, sublocation, value)}>{sublocation[0].toUpperCase()}{sublocation.slice(1,)}</DropdownMenuItem>
+                                          )}
+                                        </DropdownMenuSubContent>
+                                      </DropdownMenuPortal>
+                                    </DropdownMenuSub>
                                   )}
                                 </DropdownMenuSubContent>
                               </DropdownMenuPortal>
@@ -491,27 +491,6 @@ export default function VehicleInspector() {
                   <div className="absolute start-0 top-0 h-full bg-success/25 -z-1 pointer-events-none" style={{ width: `${vehicleTransportProgress*100}%` }}></div>
                 </div>}
                 {vehicleTransport && <Button className="py-1 font-consolas uppercase bg-danger/25 hover:bg-danger/50" onClick={() => stopTransport()}>Stop</Button>}
-              </div>
-
-              <div className="flex flex-col gap-1 mt-1 font-medium">
-                <p>Site</p>
-                <Select onValueChange={(val) => setVehicleSite(val)} value={vehicleSite}>
-                  <SelectTrigger className="font-bold font-consolas uppercase text-label-secondary/75 bg-bg-secondary/50 border border-label-secondary/25 w-full mb-2">
-                    <SelectValue></SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groupPOIsByLocation(POIs).map((poiGroup, i) =>
-                      <SelectGroup key={poiGroup.location} className={i>0?"mt-2":""}>
-                        <SelectLabel>{poiGroup.location}</SelectLabel>
-                          {poiGroup.sites.map(site =>
-                            <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
-                          )}
-                      </SelectGroup>
-                    )}
-                  </SelectContent>
-                </Select>
-
-                <Button className="py-1 font-consolas uppercase not-disabled:hover:bg-success/50" disabled={!vehicleSite||vehicleTransport!=undefined||parentChopsticks!=undefined} onClick={() => changeVehicleSite()}>Teleport</Button>
               </div>
             </CollapsibleContent>
           </Collapsible>
