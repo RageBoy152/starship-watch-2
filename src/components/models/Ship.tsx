@@ -81,7 +81,7 @@ export default function Ship({ vehicle }: { vehicle: Vehicle }) {
         </Html>}
       </group>
 
-      <ReusableTransformControls ref={vehicleRef} vehicle={vehicle} />
+      <ReusableTransformControls ref={vehicleRef} vehicle={vehicle} yOffset={yOffset} />
     </>
   );
 }
